@@ -1,4 +1,5 @@
 #include "hwbp_core.h"
+#include <avr/pgmspace.h>
 #include "hwbp_core_regs.h"
 #include "hwbp_core_types.h"
 
@@ -6,12 +7,20 @@
 #include "app_funcs.h"
 #include "app_ios_and_regs.h"
 
+#ifndef F_CPU
 #define F_CPU 32000000
+#endif
 #include <util/delay.h>
 
 #include "i2c.h"
 #include "stepper_control.h"
-#include "quick_movement.h"
+
+#ifndef HW_VERSION_H
+#define HW_VERSION_H 1
+#endif
+#ifndef HW_VERSION_L
+#define HW_VERSION_L 0
+#endif
 
 /************************************************************************/
 /* Declare application registers                                        */
@@ -20,8 +29,8 @@ extern AppRegs app_regs;
 extern uint8_t app_regs_type[];
 extern uint16_t app_regs_n_elements[];
 extern uint8_t *app_regs_pointer[];
-extern void (*app_func_rd_pointer[])(void);
-extern bool (*app_func_wr_pointer[])(void*);
+extern void (* const app_func_rd_pointer[])(void) PROGMEM;
+extern bool (* const app_func_wr_pointer[])(void*) PROGMEM;
 
 /************************************************************************/
 /* Initialize app                                                       */
@@ -30,11 +39,13 @@ static const uint8_t default_device_name[] = "StepperDriver";
 
 void hwbp_app_initialize(void)
 {
-    /* Define versions */
-    uint8_t hwH = 1;
-    uint8_t hwL = 1;
-    uint8_t fwH = 0;
-    uint8_t fwL = 9;
+    /* Define versions. The hardware version describes the PCB revision the image is
+       built for (1.0 default, 1.1 for the boards with enable-line/USB-C protection);
+       the Makefile sets it with `make HW=1.1`, Microchip Studio users edit the defaults. */
+    uint8_t hwH = HW_VERSION_H;
+    uint8_t hwL = HW_VERSION_L;
+    uint8_t fwH = 1;
+    uint8_t fwL = 0;
     uint8_t ass = 0;
     
    	/* Start core */
@@ -244,13 +255,13 @@ uint16_t acquisition_counter = 0;
 extern uint8_t enable_counter;
 extern void enable_motors (void);
 
-extern int32_t user_requested_steps[];
-extern bool send_motor_stopped_notification[];
+/* Relative pulses requested by the host, applied by the 1 ms callback. */
+int32_t user_requested_steps[MOTORS_QUANTITY];
+/* Absolute targets: resolved against the exact position once the motor is idle. */
+bool    absolute_pending[MOTORS_QUANTITY];
+int32_t absolute_target[MOTORS_QUANTITY];
 
 extern uint8_t encoders_enabled_mask;
-
-extern uint8_t m1_quick_count_down;
-extern uint8_t m2_quick_count_down;
 
 void core_callback_t_before_exec(void)
 {
@@ -319,20 +330,10 @@ void core_callback_t_before_exec(void)
 		}
 	}
 	
-	/* Notify that motor is stopped */
-	uint8_t motors_mask = 0;	
-	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
-	{
-		
-		if (send_motor_stopped_notification[i])
-		{
-			send_motor_stopped_notification[i] = false;
-			
-			motors_mask |= (1<<i);
-		}		
-	}	
+	/* Notify moves that finished or were stopped since the last millisecond */
+	uint8_t motors_mask = motion_take_stopped_mask();
 	if (motors_mask)
-	{		
+	{
 		send_motors_stopped_event(motors_mask);
 	}
 	
@@ -374,102 +375,30 @@ void core_callback_t_new_second(void)
 void core_callback_t_500us(void) {}
 void core_callback_t_1ms(void)
 {
-// 	if ((app_regs.REG_CONTROL & B_ENABLE_MOTOR) == false)
-// 	{
-// 		/* Disable medium and high level interrupts */
-// 		/* Medium are enough but we can win some precious cpu time here */
-// 		PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm;
-// 		
-// 		/* Stop motor */
-// 		stop_rotation();
-// 		
-// 		/* Re-enable all interrupt levels */
-// 		PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
-// 	}
-	
-	if (user_requested_steps[0] != 0)
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
 	{
-		/* Disable medium and high level interrupts */
-		/* Medium are enough but we can win some precious cpu time here */
-		PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm;
-		
-		/* Update steps with the user request */
-		user_requested_steps[0] = user_sent_request(user_requested_steps[0], 0);
-		
-		/* Re-enable all interrupt levels */
-		PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
-	}
-	
-	if (m1_quick_count_down == 0)
-	{
-		if (user_requested_steps[1] != 0)
+		/* Absolute moves wait for an exact, settled position */
+		if (absolute_pending[i])
 		{
-			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm;
-		
-			user_requested_steps[1] = user_sent_request(user_requested_steps[1], 1);
-		
-			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
-		}
-	}
-	else
-	{		
-		if (m1_quick_count_down == 1)
-		{
-			// Means that motor is moving
-		}
-		else
-		{	
-			m1_quick_count_down--;
-			
-			if (m1_quick_count_down == 2)
+			if (motion_is_running(i))
 			{
-				m1_quick_count_down--;
-				
-				//m1_start_quick_movement(); // old way
-				m1_initiate_quick_movement(); // new way
+				stop_rotation(i);
 			}
-		}		
-	}
-	
-	if (m2_quick_count_down == 0)
-	{
-		if (user_requested_steps[2] != 0)
-		{
-			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm;
-			
-			user_requested_steps[2] = user_sent_request(user_requested_steps[2], 2);
-			
-			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
-		}
-	}
-	else
-	{
-		if (m2_quick_count_down == 1)
-		{
-			// Means that motor is moving
-		}
-		else
-		{
-			m2_quick_count_down--;
-			
-			if (m2_quick_count_down == 2)
+			else if (motion_is_idle(i))
 			{
-				m2_quick_count_down--;
-				
-				//m2_start_quick_movement(); // old way
-				m2_initiate_quick_movement(); // new way
+				user_requested_steps[i] += absolute_target[i] - app_regs.REG_ACCUMULATED_STEPS[i];
+				absolute_pending[i] = false;
 			}
 		}
+
+		if (user_requested_steps[i] != 0)
+		{
+			user_requested_steps[i] = user_sent_request(user_requested_steps[i], i);
+		}
 	}
-	
-	if (user_requested_steps[3] != 0)
-	{
-		PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm;
-		
-		user_requested_steps[3] = user_sent_request(user_requested_steps[3], 3);
-		
-		PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
-	}
+
+	/* Trapezoidal planner: speed update and position tracking for all motors */
+	motion_tick_1ms();
 }
 
 /************************************************************************/
@@ -504,7 +433,7 @@ bool core_read_app_register(uint8_t add, uint8_t type)
 		return false;
 	
 	/* Receive data */
-	(*app_func_rd_pointer[add-APP_REGS_ADD_MIN])();	
+	((void (*)(void))pgm_read_word(&app_func_rd_pointer[add-APP_REGS_ADD_MIN]))();
 
 	/* Return success */
 	return true;
@@ -528,5 +457,5 @@ bool core_write_app_register(uint8_t add, uint8_t type, uint8_t * content, uint1
 		return false;
 
 	/* Process data and return false if write is not allowed or contains errors */
-	return (*app_func_wr_pointer[add-APP_REGS_ADD_MIN])(content);
+	return ((bool (*)(void*))pgm_read_word(&app_func_wr_pointer[add-APP_REGS_ADD_MIN]))(content);
 }
