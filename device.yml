@@ -3,7 +3,7 @@
 # yaml-language-server: $schema=https://harp-tech.org/draft-02/schema/device.json
 device: StepperDriver
 whoAmI: 1130
-firmwareVersion: "0.9"
+firmwareVersion: "1.0"
 hardwareTargets: "1.1" # Also compatible with version 1.0
 registers:
   ##################################
@@ -128,12 +128,12 @@ registers:
 
   Motor0StepInterval: &nominalinterval
     address: 54
-    minValue: 100
-    maxValue: 20000
+    minValue: 10
+    maxValue: 16000
     defaultValue: 250
     type: U16
     access: Write
-    description: Configures the time between step motor pulses (us) when running at nominal speed for motor 0.
+    description: Configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.
   Motor1StepInterval:
     <<: *nominalinterval
     address: 55
@@ -149,12 +149,12 @@ registers:
 
   Motor0MaximumStepInterval: &maxinterval
     address: 58
-    minValue: 100
-    maxValue: 20000
+    minValue: 10
+    maxValue: 16000
     defaultValue: 2000
     type: U16
     access: Write
-    description: Configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0.
+    description: Configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.
   Motor1MaximumStepInterval:
     <<: *maxinterval
     address: 59
@@ -175,19 +175,19 @@ registers:
     defaultValue: 10
     type: U16
     access: Write
-    description: Configures the acceleration for motor 0. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    description: Deprecated since firmware 1.0, kept for compatibility. Writing this register sets Motor0Acceleration to the constant acceleration that reproduces the duration of the old ramp (which removed this many microseconds from the pulse interval on every pulse). Prefer Motor0Acceleration.
   Motor1StepAccelerationInterval:
     <<: *accperiod
     address: 63
-    description: Configures the acceleration for motor 1. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    description: Deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor1Acceleration.
   Motor2StepAccelerationInterval:
     <<: *accperiod
     address: 64
-    description: Configures the acceleration for motor 2. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    description: Deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor2Acceleration.
   Motor3StepAccelerationInterval:
     <<: *accperiod
     address: 65
-    description: Configures the acceleration for motor 3. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    description: Deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor3Acceleration.
 
   EncoderMode:
     address: 66
@@ -495,7 +495,7 @@ registers:
     type: S32
     length: 4
     access: Write
-    description: Starts the movement of all motors with the step interval defined by this array. The value's signal defines the direction.
+    description: Runs all motors continuously at the step interval (us) given by this array, without acceleration ramp; the sign gives the direction and 0 stops. Since firmware 1.0 speed changes and stops take effect within 1 ms, a direction change stops the motor before reversing, travel limits are honoured, and the write is refused if the pulse rates of all moving motors would exceed the CPU budget.
     payloadSpec:
       Motor0:
         offset: 0
@@ -514,19 +514,19 @@ registers:
     address: 106
     type: S32
     access: Write
-    description: Starts the movement of motor 0 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    description: Runs motor 0 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
   Motor1StepRelative:
     <<: *immediatesteps
     address: 107
-    description: Starts the movement of motor 1 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    description: Runs motor 1 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
   Motor2StepRelative:
     <<: *immediatesteps
     address: 108
-    description: Starts the movement of motor 2 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    description: Runs motor 2 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
   Motor3StepRelative:
     <<: *immediatesteps
     address: 109
-    description: Starts the movement of motor 3 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    description: Runs motor 3 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
 
   ##################################
   # Actions
@@ -635,16 +635,16 @@ registers:
     type: U8
     access: Write
     maskType: StepperMotors
-    description: Triggers the quick movement in the correspondent motor with the currently configured settings.
+    description: Triggers a quick movement on motors 1 and/or 2 using the Quick* settings. Since firmware 1.0 this runs the same trapezoidal engine as MoveRelative; the write is refused if the move would exceed the CPU budget (see Motor0Acceleration).
   Motor1QuickMovementPulseDistance: &quickmovement_pulsedistance
     address: 131
     type: Float
     access: Write
-    description: Sets the single step pulse distance for a quick movement, in micrometers, for the Motor 1.
+    description: Sets the distance travelled per pulse, in micrometers, for quick movements of motor 1 (e.g. 1.25 for 8 microsteps on a 2 mm lead).
   Motor2QuickMovementPulseDistance:
     <<: *quickmovement_pulsedistance
     address: 132
-    description: Sets the single step pulse distance for a quick movement, in micrometers, for the Motor 2.
+    description: Sets the distance travelled per pulse, in micrometers, for quick movements of motor 2.
   Motor1QuickMovementNominalSpeed: &quickmovement_nominalspeed
     address: 133
     type: Float
@@ -680,7 +680,36 @@ registers:
   Motor2QuickMovementDistance:
     <<: *quickmovement_distance
     address: 140
-    description: Sets the travel distance of a quick movement, in millimeters, for the Motor 1.
+    description: Sets the travel distance of a quick movement, in millimeters, for the Motor 2.
+
+  ##################################
+  # Trapezoidal motion (firmware 1.0)
+  ##################################
+  Motor0Acceleration: &acceleration
+    address: 141
+    minValue: 1
+    defaultValue: 17778
+    type: U32
+    access: Write
+    description: >-
+      Acceleration of motor 0 in steps per second squared, used by every move. The motor
+      accelerates from the speed given by Motor0MaximumStepInterval to the speed given by
+      Motor0StepInterval, cruises, and decelerates symmetrically (trapezoidal profile).
+      Moves are refused when the pulse rates of all moving motors together exceed the
+      device's CPU budget: each motor costs about 2.5 us per pulse and the total must stay
+      below 30% of the CPU (e.g. one motor at 10 us between pulses, or four at 34 us).
+  Motor1Acceleration:
+    <<: *acceleration
+    address: 142
+    description: Acceleration of motor 1 in steps per second squared, used by every move.
+  Motor2Acceleration:
+    <<: *acceleration
+    address: 143
+    description: Acceleration of motor 2 in steps per second squared, used by every move.
+  Motor3Acceleration:
+    <<: *acceleration
+    address: 144
+    description: Acceleration of motor 3 in steps per second squared, used by every move.
 
 ##################################
 # Bit masks
@@ -753,7 +782,10 @@ groupMasks:
       ReductionTo12Percent: 2
       NoReduction: 3
   InputOpModeConfig:
-    description: Specifies the inputs operation mode.
+    description: >-
+      Specifies the inputs operation mode. Rising and Falling refer to the DigitalInputState
+      bit of the input, which is 1 while the (pulled-up) input line is low: StopMotorOnFalling
+      stops the motor when the line goes high, StopMotorOnRising when it goes low.
     values:
       EventOnly: 0x0
       StopMotor0OnRising: 0x10

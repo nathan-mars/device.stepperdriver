@@ -145,7 +145,11 @@ namespace Harp.StepperDriver
             { 137, typeof(Motor1QuickMovementAcceleration) },
             { 138, typeof(Motor2QuickMovementAcceleration) },
             { 139, typeof(Motor1QuickMovementDistance) },
-            { 140, typeof(Motor2QuickMovementDistance) }
+            { 140, typeof(Motor2QuickMovementDistance) },
+            { 141, typeof(Motor0Acceleration) },
+            { 142, typeof(Motor1Acceleration) },
+            { 143, typeof(Motor2Acceleration) },
+            { 144, typeof(Motor3Acceleration) }
         };
 
         /// <summary>
@@ -450,6 +454,10 @@ namespace Harp.StepperDriver
     /// <seealso cref="Motor2QuickMovementAcceleration"/>
     /// <seealso cref="Motor1QuickMovementDistance"/>
     /// <seealso cref="Motor2QuickMovementDistance"/>
+    /// <seealso cref="Motor0Acceleration"/>
+    /// <seealso cref="Motor1Acceleration"/>
+    /// <seealso cref="Motor2Acceleration"/>
+    /// <seealso cref="Motor3Acceleration"/>
     [XmlInclude(typeof(EnableDriver))]
     [XmlInclude(typeof(DisableDriver))]
     [XmlInclude(typeof(EnableEncoders))]
@@ -541,6 +549,10 @@ namespace Harp.StepperDriver
     [XmlInclude(typeof(Motor2QuickMovementAcceleration))]
     [XmlInclude(typeof(Motor1QuickMovementDistance))]
     [XmlInclude(typeof(Motor2QuickMovementDistance))]
+    [XmlInclude(typeof(Motor0Acceleration))]
+    [XmlInclude(typeof(Motor1Acceleration))]
+    [XmlInclude(typeof(Motor2Acceleration))]
+    [XmlInclude(typeof(Motor3Acceleration))]
     [Description("Filters register-specific messages reported by the StepperDriver device.")]
     public class FilterRegister : FilterRegisterBuilder, INamedElement
     {
@@ -653,6 +665,10 @@ namespace Harp.StepperDriver
     /// <seealso cref="Motor2QuickMovementAcceleration"/>
     /// <seealso cref="Motor1QuickMovementDistance"/>
     /// <seealso cref="Motor2QuickMovementDistance"/>
+    /// <seealso cref="Motor0Acceleration"/>
+    /// <seealso cref="Motor1Acceleration"/>
+    /// <seealso cref="Motor2Acceleration"/>
+    /// <seealso cref="Motor3Acceleration"/>
     [XmlInclude(typeof(EnableDriver))]
     [XmlInclude(typeof(DisableDriver))]
     [XmlInclude(typeof(EnableEncoders))]
@@ -744,6 +760,10 @@ namespace Harp.StepperDriver
     [XmlInclude(typeof(Motor2QuickMovementAcceleration))]
     [XmlInclude(typeof(Motor1QuickMovementDistance))]
     [XmlInclude(typeof(Motor2QuickMovementDistance))]
+    [XmlInclude(typeof(Motor0Acceleration))]
+    [XmlInclude(typeof(Motor1Acceleration))]
+    [XmlInclude(typeof(Motor2Acceleration))]
+    [XmlInclude(typeof(Motor3Acceleration))]
     [XmlInclude(typeof(TimestampedEnableDriver))]
     [XmlInclude(typeof(TimestampedDisableDriver))]
     [XmlInclude(typeof(TimestampedEnableEncoders))]
@@ -835,6 +855,10 @@ namespace Harp.StepperDriver
     [XmlInclude(typeof(TimestampedMotor2QuickMovementAcceleration))]
     [XmlInclude(typeof(TimestampedMotor1QuickMovementDistance))]
     [XmlInclude(typeof(TimestampedMotor2QuickMovementDistance))]
+    [XmlInclude(typeof(TimestampedMotor0Acceleration))]
+    [XmlInclude(typeof(TimestampedMotor1Acceleration))]
+    [XmlInclude(typeof(TimestampedMotor2Acceleration))]
+    [XmlInclude(typeof(TimestampedMotor3Acceleration))]
     [Description("Filters and selects specific messages reported by the StepperDriver device.")]
     public partial class Parse : ParseBuilder, INamedElement
     {
@@ -944,6 +968,10 @@ namespace Harp.StepperDriver
     /// <seealso cref="Motor2QuickMovementAcceleration"/>
     /// <seealso cref="Motor1QuickMovementDistance"/>
     /// <seealso cref="Motor2QuickMovementDistance"/>
+    /// <seealso cref="Motor0Acceleration"/>
+    /// <seealso cref="Motor1Acceleration"/>
+    /// <seealso cref="Motor2Acceleration"/>
+    /// <seealso cref="Motor3Acceleration"/>
     [XmlInclude(typeof(EnableDriver))]
     [XmlInclude(typeof(DisableDriver))]
     [XmlInclude(typeof(EnableEncoders))]
@@ -1035,6 +1063,10 @@ namespace Harp.StepperDriver
     [XmlInclude(typeof(Motor2QuickMovementAcceleration))]
     [XmlInclude(typeof(Motor1QuickMovementDistance))]
     [XmlInclude(typeof(Motor2QuickMovementDistance))]
+    [XmlInclude(typeof(Motor0Acceleration))]
+    [XmlInclude(typeof(Motor1Acceleration))]
+    [XmlInclude(typeof(Motor2Acceleration))]
+    [XmlInclude(typeof(Motor3Acceleration))]
     [Description("Formats a sequence of values as specific StepperDriver register messages.")]
     public partial class Format : FormatBuilder, INamedElement
     {
@@ -3180,9 +3212,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that configures the time between step motor pulses (us) when running at nominal speed for motor 0.
+    /// Represents a register that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.
     /// </summary>
-    [Description("Configures the time between step motor pulses (us) when running at nominal speed for motor 0.")]
+    [Description("Configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.")]
     public partial class Motor0StepInterval
     {
         /// <summary>
@@ -3564,9 +3596,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0.
+    /// Represents a register that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.
     /// </summary>
-    [Description("Configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0.")]
+    [Description("Configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.")]
     public partial class Motor0MaximumStepInterval
     {
         /// <summary>
@@ -3948,9 +3980,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that configures the acceleration for motor 0. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    /// Represents a register that deprecated since firmware 1.0, kept for compatibility. Writing this register sets Motor0Acceleration to the constant acceleration that reproduces the duration of the old ramp (which removed this many microseconds from the pulse interval on every pulse). Prefer Motor0Acceleration.
     /// </summary>
-    [Description("Configures the acceleration for motor 0. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+    [Description("Deprecated since firmware 1.0, kept for compatibility. Writing this register sets Motor0Acceleration to the constant acceleration that reproduces the duration of the old ramp (which removed this many microseconds from the pulse interval on every pulse). Prefer Motor0Acceleration.")]
     public partial class Motor0StepAccelerationInterval
     {
         /// <summary>
@@ -4044,9 +4076,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that configures the acceleration for motor 1. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    /// Represents a register that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor1Acceleration.
     /// </summary>
-    [Description("Configures the acceleration for motor 1. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+    [Description("Deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor1Acceleration.")]
     public partial class Motor1StepAccelerationInterval
     {
         /// <summary>
@@ -4140,9 +4172,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that configures the acceleration for motor 2. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    /// Represents a register that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor2Acceleration.
     /// </summary>
-    [Description("Configures the acceleration for motor 2. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+    [Description("Deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor2Acceleration.")]
     public partial class Motor2StepAccelerationInterval
     {
         /// <summary>
@@ -4236,9 +4268,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that configures the acceleration for motor 3. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    /// Represents a register that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor3Acceleration.
     /// </summary>
-    [Description("Configures the acceleration for motor 3. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+    [Description("Deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor3Acceleration.")]
     public partial class Motor3StepAccelerationInterval
     {
         /// <summary>
@@ -8235,9 +8267,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that starts the movement of all motors with the step interval defined by this array. The value's signal defines the direction.
+    /// Represents a register that runs all motors continuously at the step interval (us) given by this array, without acceleration ramp; the sign gives the direction and 0 stops. Since firmware 1.0 speed changes and stops take effect within 1 ms, a direction change stops the motor before reversing, travel limits are honoured, and the write is refused if the pulse rates of all moving motors would exceed the CPU budget.
     /// </summary>
-    [Description("Starts the movement of all motors with the step interval defined by this array. The value's signal defines the direction.")]
+    [Description("Runs all motors continuously at the step interval (us) given by this array, without acceleration ramp; the sign gives the direction and 0 stops. Since firmware 1.0 speed changes and stops take effect within 1 ms, a direction change stops the motor before reversing, travel limits are honoured, and the write is refused if the pulse rates of all moving motors would exceed the CPU budget.")]
     public partial class StepRelative
     {
         /// <summary>
@@ -8353,9 +8385,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that starts the movement of motor 0 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    /// Represents a register that runs motor 0 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
     /// </summary>
-    [Description("Starts the movement of motor 0 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+    [Description("Runs motor 0 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
     public partial class Motor0StepRelative
     {
         /// <summary>
@@ -8449,9 +8481,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that starts the movement of motor 1 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    /// Represents a register that runs motor 1 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
     /// </summary>
-    [Description("Starts the movement of motor 1 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+    [Description("Runs motor 1 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
     public partial class Motor1StepRelative
     {
         /// <summary>
@@ -8545,9 +8577,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that starts the movement of motor 2 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    /// Represents a register that runs motor 2 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
     /// </summary>
-    [Description("Starts the movement of motor 2 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+    [Description("Runs motor 2 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
     public partial class Motor2StepRelative
     {
         /// <summary>
@@ -8641,9 +8673,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that starts the movement of motor 3 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    /// Represents a register that runs motor 3 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
     /// </summary>
-    [Description("Starts the movement of motor 3 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+    [Description("Runs motor 3 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
     public partial class Motor3StepRelative
     {
         /// <summary>
@@ -9327,9 +9359,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that triggers the quick movement in the correspondent motor with the currently configured settings.
+    /// Represents a register that triggers a quick movement on motors 1 and/or 2 using the Quick* settings. Since firmware 1.0 this runs the same trapezoidal engine as MoveRelative; the write is refused if the move would exceed the CPU budget (see Motor0Acceleration).
     /// </summary>
-    [Description("Triggers the quick movement in the correspondent motor with the currently configured settings.")]
+    [Description("Triggers a quick movement on motors 1 and/or 2 using the Quick* settings. Since firmware 1.0 this runs the same trapezoidal engine as MoveRelative; the write is refused if the move would exceed the CPU budget (see Motor0Acceleration).")]
     public partial class TriggerQuickMovement
     {
         /// <summary>
@@ -9424,9 +9456,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 1.
+    /// Represents a register that sets the distance travelled per pulse, in micrometers, for quick movements of motor 1 (e.g. 1.25 for 8 microsteps on a 2 mm lead).
     /// </summary>
-    [Description("Sets the single step pulse distance for a quick movement, in micrometers, for the Motor 1.")]
+    [Description("Sets the distance travelled per pulse, in micrometers, for quick movements of motor 1 (e.g. 1.25 for 8 microsteps on a 2 mm lead).")]
     public partial class Motor1QuickMovementPulseDistance
     {
         /// <summary>
@@ -9520,9 +9552,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 2.
+    /// Represents a register that sets the distance travelled per pulse, in micrometers, for quick movements of motor 2.
     /// </summary>
-    [Description("Sets the single step pulse distance for a quick movement, in micrometers, for the Motor 2.")]
+    [Description("Sets the distance travelled per pulse, in micrometers, for quick movements of motor 2.")]
     public partial class Motor2QuickMovementPulseDistance
     {
         /// <summary>
@@ -10288,9 +10320,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that sets the travel distance of a quick movement, in millimeters, for the Motor 1.
+    /// Represents a register that sets the travel distance of a quick movement, in millimeters, for the Motor 2.
     /// </summary>
-    [Description("Sets the travel distance of a quick movement, in millimeters, for the Motor 1.")]
+    [Description("Sets the travel distance of a quick movement, in millimeters, for the Motor 2.")]
     public partial class Motor2QuickMovementDistance
     {
         /// <summary>
@@ -10380,6 +10412,390 @@ namespace Harp.StepperDriver
         public static Timestamped<float> GetPayload(HarpMessage message)
         {
             return Motor2QuickMovementDistance.GetTimestampedPayload(message);
+        }
+    }
+
+    /// <summary>
+    /// Represents a register that acceleration of motor 0 in steps per second squared, used by every move. The motor accelerates from the speed given by Motor0MaximumStepInterval to the speed given by Motor0StepInterval, cruises, and decelerates symmetrically (trapezoidal profile). Moves are refused when the pulse rates of all moving motors together exceed the device's CPU budget: each motor costs about 2.5 us per pulse and the total must stay below 30% of the CPU (e.g. one motor at 10 us between pulses, or four at 34 us).
+    /// </summary>
+    [Description("Acceleration of motor 0 in steps per second squared, used by every move. The motor accelerates from the speed given by Motor0MaximumStepInterval to the speed given by Motor0StepInterval, cruises, and decelerates symmetrically (trapezoidal profile). Moves are refused when the pulse rates of all moving motors together exceed the device's CPU budget: each motor costs about 2.5 us per pulse and the total must stay below 30% of the CPU (e.g. one motor at 10 us between pulses, or four at 34 us).")]
+    public partial class Motor0Acceleration
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="Motor0Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const int Address = 141;
+
+        /// <summary>
+        /// Represents the payload type of the <see cref="Motor0Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const PayloadType RegisterType = PayloadType.U32;
+
+        /// <summary>
+        /// Represents the length of the <see cref="Motor0Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const int RegisterLength = 1;
+
+        /// <summary>
+        /// Returns the payload data for <see cref="Motor0Acceleration"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the message payload.</returns>
+        public static uint GetPayload(HarpMessage message)
+        {
+            return message.GetPayloadUInt32();
+        }
+
+        /// <summary>
+        /// Returns the timestamped payload data for <see cref="Motor0Acceleration"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<uint> GetTimestampedPayload(HarpMessage message)
+        {
+            return message.GetTimestampedPayloadUInt32();
+        }
+
+        /// <summary>
+        /// Returns a Harp message for the <see cref="Motor0Acceleration"/> register.
+        /// </summary>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="Motor0Acceleration"/> register
+        /// with the specified message type and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(MessageType messageType, uint value)
+        {
+            return HarpMessage.FromUInt32(Address, messageType, value);
+        }
+
+        /// <summary>
+        /// Returns a timestamped Harp message for the <see cref="Motor0Acceleration"/>
+        /// register.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="Motor0Acceleration"/> register
+        /// with the specified message type, timestamp, and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(double timestamp, MessageType messageType, uint value)
+        {
+            return HarpMessage.FromUInt32(Address, timestamp, messageType, value);
+        }
+    }
+
+    /// <summary>
+    /// Provides methods for manipulating timestamped messages from the
+    /// Motor0Acceleration register.
+    /// </summary>
+    /// <seealso cref="Motor0Acceleration"/>
+    [Description("Filters and selects timestamped messages from the Motor0Acceleration register.")]
+    public partial class TimestampedMotor0Acceleration
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="Motor0Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const int Address = Motor0Acceleration.Address;
+
+        /// <summary>
+        /// Returns timestamped payload data for <see cref="Motor0Acceleration"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<uint> GetPayload(HarpMessage message)
+        {
+            return Motor0Acceleration.GetTimestampedPayload(message);
+        }
+    }
+
+    /// <summary>
+    /// Represents a register that acceleration of motor 1 in steps per second squared, used by every move.
+    /// </summary>
+    [Description("Acceleration of motor 1 in steps per second squared, used by every move.")]
+    public partial class Motor1Acceleration
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="Motor1Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const int Address = 142;
+
+        /// <summary>
+        /// Represents the payload type of the <see cref="Motor1Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const PayloadType RegisterType = PayloadType.U32;
+
+        /// <summary>
+        /// Represents the length of the <see cref="Motor1Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const int RegisterLength = 1;
+
+        /// <summary>
+        /// Returns the payload data for <see cref="Motor1Acceleration"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the message payload.</returns>
+        public static uint GetPayload(HarpMessage message)
+        {
+            return message.GetPayloadUInt32();
+        }
+
+        /// <summary>
+        /// Returns the timestamped payload data for <see cref="Motor1Acceleration"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<uint> GetTimestampedPayload(HarpMessage message)
+        {
+            return message.GetTimestampedPayloadUInt32();
+        }
+
+        /// <summary>
+        /// Returns a Harp message for the <see cref="Motor1Acceleration"/> register.
+        /// </summary>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="Motor1Acceleration"/> register
+        /// with the specified message type and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(MessageType messageType, uint value)
+        {
+            return HarpMessage.FromUInt32(Address, messageType, value);
+        }
+
+        /// <summary>
+        /// Returns a timestamped Harp message for the <see cref="Motor1Acceleration"/>
+        /// register.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="Motor1Acceleration"/> register
+        /// with the specified message type, timestamp, and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(double timestamp, MessageType messageType, uint value)
+        {
+            return HarpMessage.FromUInt32(Address, timestamp, messageType, value);
+        }
+    }
+
+    /// <summary>
+    /// Provides methods for manipulating timestamped messages from the
+    /// Motor1Acceleration register.
+    /// </summary>
+    /// <seealso cref="Motor1Acceleration"/>
+    [Description("Filters and selects timestamped messages from the Motor1Acceleration register.")]
+    public partial class TimestampedMotor1Acceleration
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="Motor1Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const int Address = Motor1Acceleration.Address;
+
+        /// <summary>
+        /// Returns timestamped payload data for <see cref="Motor1Acceleration"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<uint> GetPayload(HarpMessage message)
+        {
+            return Motor1Acceleration.GetTimestampedPayload(message);
+        }
+    }
+
+    /// <summary>
+    /// Represents a register that acceleration of motor 2 in steps per second squared, used by every move.
+    /// </summary>
+    [Description("Acceleration of motor 2 in steps per second squared, used by every move.")]
+    public partial class Motor2Acceleration
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="Motor2Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const int Address = 143;
+
+        /// <summary>
+        /// Represents the payload type of the <see cref="Motor2Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const PayloadType RegisterType = PayloadType.U32;
+
+        /// <summary>
+        /// Represents the length of the <see cref="Motor2Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const int RegisterLength = 1;
+
+        /// <summary>
+        /// Returns the payload data for <see cref="Motor2Acceleration"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the message payload.</returns>
+        public static uint GetPayload(HarpMessage message)
+        {
+            return message.GetPayloadUInt32();
+        }
+
+        /// <summary>
+        /// Returns the timestamped payload data for <see cref="Motor2Acceleration"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<uint> GetTimestampedPayload(HarpMessage message)
+        {
+            return message.GetTimestampedPayloadUInt32();
+        }
+
+        /// <summary>
+        /// Returns a Harp message for the <see cref="Motor2Acceleration"/> register.
+        /// </summary>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="Motor2Acceleration"/> register
+        /// with the specified message type and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(MessageType messageType, uint value)
+        {
+            return HarpMessage.FromUInt32(Address, messageType, value);
+        }
+
+        /// <summary>
+        /// Returns a timestamped Harp message for the <see cref="Motor2Acceleration"/>
+        /// register.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="Motor2Acceleration"/> register
+        /// with the specified message type, timestamp, and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(double timestamp, MessageType messageType, uint value)
+        {
+            return HarpMessage.FromUInt32(Address, timestamp, messageType, value);
+        }
+    }
+
+    /// <summary>
+    /// Provides methods for manipulating timestamped messages from the
+    /// Motor2Acceleration register.
+    /// </summary>
+    /// <seealso cref="Motor2Acceleration"/>
+    [Description("Filters and selects timestamped messages from the Motor2Acceleration register.")]
+    public partial class TimestampedMotor2Acceleration
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="Motor2Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const int Address = Motor2Acceleration.Address;
+
+        /// <summary>
+        /// Returns timestamped payload data for <see cref="Motor2Acceleration"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<uint> GetPayload(HarpMessage message)
+        {
+            return Motor2Acceleration.GetTimestampedPayload(message);
+        }
+    }
+
+    /// <summary>
+    /// Represents a register that acceleration of motor 3 in steps per second squared, used by every move.
+    /// </summary>
+    [Description("Acceleration of motor 3 in steps per second squared, used by every move.")]
+    public partial class Motor3Acceleration
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="Motor3Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const int Address = 144;
+
+        /// <summary>
+        /// Represents the payload type of the <see cref="Motor3Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const PayloadType RegisterType = PayloadType.U32;
+
+        /// <summary>
+        /// Represents the length of the <see cref="Motor3Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const int RegisterLength = 1;
+
+        /// <summary>
+        /// Returns the payload data for <see cref="Motor3Acceleration"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the message payload.</returns>
+        public static uint GetPayload(HarpMessage message)
+        {
+            return message.GetPayloadUInt32();
+        }
+
+        /// <summary>
+        /// Returns the timestamped payload data for <see cref="Motor3Acceleration"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<uint> GetTimestampedPayload(HarpMessage message)
+        {
+            return message.GetTimestampedPayloadUInt32();
+        }
+
+        /// <summary>
+        /// Returns a Harp message for the <see cref="Motor3Acceleration"/> register.
+        /// </summary>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="Motor3Acceleration"/> register
+        /// with the specified message type and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(MessageType messageType, uint value)
+        {
+            return HarpMessage.FromUInt32(Address, messageType, value);
+        }
+
+        /// <summary>
+        /// Returns a timestamped Harp message for the <see cref="Motor3Acceleration"/>
+        /// register.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="Motor3Acceleration"/> register
+        /// with the specified message type, timestamp, and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(double timestamp, MessageType messageType, uint value)
+        {
+            return HarpMessage.FromUInt32(Address, timestamp, messageType, value);
+        }
+    }
+
+    /// <summary>
+    /// Provides methods for manipulating timestamped messages from the
+    /// Motor3Acceleration register.
+    /// </summary>
+    /// <seealso cref="Motor3Acceleration"/>
+    [Description("Filters and selects timestamped messages from the Motor3Acceleration register.")]
+    public partial class TimestampedMotor3Acceleration
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="Motor3Acceleration"/> register. This field is constant.
+        /// </summary>
+        public const int Address = Motor3Acceleration.Address;
+
+        /// <summary>
+        /// Returns timestamped payload data for <see cref="Motor3Acceleration"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<uint> GetPayload(HarpMessage message)
+        {
+            return Motor3Acceleration.GetTimestampedPayload(message);
         }
     }
 
@@ -10478,6 +10894,10 @@ namespace Harp.StepperDriver
     /// <seealso cref="CreateMotor2QuickMovementAccelerationPayload"/>
     /// <seealso cref="CreateMotor1QuickMovementDistancePayload"/>
     /// <seealso cref="CreateMotor2QuickMovementDistancePayload"/>
+    /// <seealso cref="CreateMotor0AccelerationPayload"/>
+    /// <seealso cref="CreateMotor1AccelerationPayload"/>
+    /// <seealso cref="CreateMotor2AccelerationPayload"/>
+    /// <seealso cref="CreateMotor3AccelerationPayload"/>
     [XmlInclude(typeof(CreateEnableDriverPayload))]
     [XmlInclude(typeof(CreateDisableDriverPayload))]
     [XmlInclude(typeof(CreateEnableEncodersPayload))]
@@ -10569,6 +10989,10 @@ namespace Harp.StepperDriver
     [XmlInclude(typeof(CreateMotor2QuickMovementAccelerationPayload))]
     [XmlInclude(typeof(CreateMotor1QuickMovementDistancePayload))]
     [XmlInclude(typeof(CreateMotor2QuickMovementDistancePayload))]
+    [XmlInclude(typeof(CreateMotor0AccelerationPayload))]
+    [XmlInclude(typeof(CreateMotor1AccelerationPayload))]
+    [XmlInclude(typeof(CreateMotor2AccelerationPayload))]
+    [XmlInclude(typeof(CreateMotor3AccelerationPayload))]
     [XmlInclude(typeof(CreateTimestampedEnableDriverPayload))]
     [XmlInclude(typeof(CreateTimestampedDisableDriverPayload))]
     [XmlInclude(typeof(CreateTimestampedEnableEncodersPayload))]
@@ -10660,6 +11084,10 @@ namespace Harp.StepperDriver
     [XmlInclude(typeof(CreateTimestampedMotor2QuickMovementAccelerationPayload))]
     [XmlInclude(typeof(CreateTimestampedMotor1QuickMovementDistancePayload))]
     [XmlInclude(typeof(CreateTimestampedMotor2QuickMovementDistancePayload))]
+    [XmlInclude(typeof(CreateTimestampedMotor0AccelerationPayload))]
+    [XmlInclude(typeof(CreateTimestampedMotor1AccelerationPayload))]
+    [XmlInclude(typeof(CreateTimestampedMotor2AccelerationPayload))]
+    [XmlInclude(typeof(CreateTimestampedMotor3AccelerationPayload))]
     [Description("Creates standard message payloads for the StepperDriver device.")]
     public partial class CreateMessage : CreateMessageBuilder, INamedElement
     {
@@ -11872,18 +12300,18 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that configures the time between step motor pulses (us) when running at nominal speed for motor 0.
+    /// that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.
     /// </summary>
     [DisplayName("Motor0StepIntervalPayload")]
-    [Description("Creates a message payload that configures the time between step motor pulses (us) when running at nominal speed for motor 0.")]
+    [Description("Creates a message payload that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.")]
     public partial class CreateMotor0StepIntervalPayload
     {
         /// <summary>
-        /// Gets or sets the value that configures the time between step motor pulses (us) when running at nominal speed for motor 0.
+        /// Gets or sets the value that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.
         /// </summary>
-        [Range(min: 100, max: 20000)]
+        [Range(min: 10, max: 16000)]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Description("The value that configures the time between step motor pulses (us) when running at nominal speed for motor 0.")]
+        [Description("The value that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.")]
         public ushort Motor0StepInterval { get; set; } = 250;
 
         /// <summary>
@@ -11896,7 +12324,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that configures the time between step motor pulses (us) when running at nominal speed for motor 0.
+        /// Creates a message that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the Motor0StepInterval register.</returns>
@@ -11908,14 +12336,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that configures the time between step motor pulses (us) when running at nominal speed for motor 0.
+    /// that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.
     /// </summary>
     [DisplayName("TimestampedMotor0StepIntervalPayload")]
-    [Description("Creates a timestamped message payload that configures the time between step motor pulses (us) when running at nominal speed for motor 0.")]
+    [Description("Creates a timestamped message payload that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.")]
     public partial class CreateTimestampedMotor0StepIntervalPayload : CreateMotor0StepIntervalPayload
     {
         /// <summary>
-        /// Creates a timestamped message that configures the time between step motor pulses (us) when running at nominal speed for motor 0.
+        /// Creates a timestamped message that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -11937,7 +12365,7 @@ namespace Harp.StepperDriver
         /// <summary>
         /// Gets or sets the value that configures the time between step motor pulses (us) when running at nominal speed for motor 1.
         /// </summary>
-        [Range(min: 100, max: 20000)]
+        [Range(min: 10, max: 16000)]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Description("The value that configures the time between step motor pulses (us) when running at nominal speed for motor 1.")]
         public ushort Motor1StepInterval { get; set; } = 250;
@@ -11993,7 +12421,7 @@ namespace Harp.StepperDriver
         /// <summary>
         /// Gets or sets the value that configures the time between step motor pulses (us) when running at nominal speed for motor 2.
         /// </summary>
-        [Range(min: 100, max: 20000)]
+        [Range(min: 10, max: 16000)]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Description("The value that configures the time between step motor pulses (us) when running at nominal speed for motor 2.")]
         public ushort Motor2StepInterval { get; set; } = 250;
@@ -12049,7 +12477,7 @@ namespace Harp.StepperDriver
         /// <summary>
         /// Gets or sets the value that configures the time between step motor pulses (us) when running at nominal speed for motor 3.
         /// </summary>
-        [Range(min: 100, max: 20000)]
+        [Range(min: 10, max: 16000)]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Description("The value that configures the time between step motor pulses (us) when running at nominal speed for motor 3.")]
         public ushort Motor3StepInterval { get; set; } = 250;
@@ -12096,18 +12524,18 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0.
+    /// that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.
     /// </summary>
     [DisplayName("Motor0MaximumStepIntervalPayload")]
-    [Description("Creates a message payload that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0.")]
+    [Description("Creates a message payload that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.")]
     public partial class CreateMotor0MaximumStepIntervalPayload
     {
         /// <summary>
-        /// Gets or sets the value that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0.
+        /// Gets or sets the value that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.
         /// </summary>
-        [Range(min: 100, max: 20000)]
+        [Range(min: 10, max: 16000)]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Description("The value that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0.")]
+        [Description("The value that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.")]
         public ushort Motor0MaximumStepInterval { get; set; } = 2000;
 
         /// <summary>
@@ -12120,7 +12548,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0.
+        /// Creates a message that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the Motor0MaximumStepInterval register.</returns>
@@ -12132,14 +12560,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0.
+    /// that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.
     /// </summary>
     [DisplayName("TimestampedMotor0MaximumStepIntervalPayload")]
-    [Description("Creates a timestamped message payload that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0.")]
+    [Description("Creates a timestamped message payload that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.")]
     public partial class CreateTimestampedMotor0MaximumStepIntervalPayload : CreateMotor0MaximumStepIntervalPayload
     {
         /// <summary>
-        /// Creates a timestamped message that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0.
+        /// Creates a timestamped message that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -12161,7 +12589,7 @@ namespace Harp.StepperDriver
         /// <summary>
         /// Gets or sets the value that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 1.
         /// </summary>
-        [Range(min: 100, max: 20000)]
+        [Range(min: 10, max: 16000)]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Description("The value that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 1.")]
         public ushort Motor1MaximumStepInterval { get; set; } = 2000;
@@ -12217,7 +12645,7 @@ namespace Harp.StepperDriver
         /// <summary>
         /// Gets or sets the value that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 2.
         /// </summary>
-        [Range(min: 100, max: 20000)]
+        [Range(min: 10, max: 16000)]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Description("The value that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 2.")]
         public ushort Motor2MaximumStepInterval { get; set; } = 2000;
@@ -12273,7 +12701,7 @@ namespace Harp.StepperDriver
         /// <summary>
         /// Gets or sets the value that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 3.
         /// </summary>
-        [Range(min: 100, max: 20000)]
+        [Range(min: 10, max: 16000)]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
         [Description("The value that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 3.")]
         public ushort Motor3MaximumStepInterval { get; set; } = 2000;
@@ -12320,18 +12748,18 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that configures the acceleration for motor 0. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    /// that deprecated since firmware 1.0, kept for compatibility. Writing this register sets Motor0Acceleration to the constant acceleration that reproduces the duration of the old ramp (which removed this many microseconds from the pulse interval on every pulse). Prefer Motor0Acceleration.
     /// </summary>
     [DisplayName("Motor0StepAccelerationIntervalPayload")]
-    [Description("Creates a message payload that configures the acceleration for motor 0. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+    [Description("Creates a message payload that deprecated since firmware 1.0, kept for compatibility. Writing this register sets Motor0Acceleration to the constant acceleration that reproduces the duration of the old ramp (which removed this many microseconds from the pulse interval on every pulse). Prefer Motor0Acceleration.")]
     public partial class CreateMotor0StepAccelerationIntervalPayload
     {
         /// <summary>
-        /// Gets or sets the value that configures the acceleration for motor 0. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+        /// Gets or sets the value that deprecated since firmware 1.0, kept for compatibility. Writing this register sets Motor0Acceleration to the constant acceleration that reproduces the duration of the old ramp (which removed this many microseconds from the pulse interval on every pulse). Prefer Motor0Acceleration.
         /// </summary>
         [Range(min: 2, max: 2000)]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Description("The value that configures the acceleration for motor 0. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+        [Description("The value that deprecated since firmware 1.0, kept for compatibility. Writing this register sets Motor0Acceleration to the constant acceleration that reproduces the duration of the old ramp (which removed this many microseconds from the pulse interval on every pulse). Prefer Motor0Acceleration.")]
         public ushort Motor0StepAccelerationInterval { get; set; } = 10;
 
         /// <summary>
@@ -12344,7 +12772,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that configures the acceleration for motor 0. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+        /// Creates a message that deprecated since firmware 1.0, kept for compatibility. Writing this register sets Motor0Acceleration to the constant acceleration that reproduces the duration of the old ramp (which removed this many microseconds from the pulse interval on every pulse). Prefer Motor0Acceleration.
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the Motor0StepAccelerationInterval register.</returns>
@@ -12356,14 +12784,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that configures the acceleration for motor 0. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    /// that deprecated since firmware 1.0, kept for compatibility. Writing this register sets Motor0Acceleration to the constant acceleration that reproduces the duration of the old ramp (which removed this many microseconds from the pulse interval on every pulse). Prefer Motor0Acceleration.
     /// </summary>
     [DisplayName("TimestampedMotor0StepAccelerationIntervalPayload")]
-    [Description("Creates a timestamped message payload that configures the acceleration for motor 0. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+    [Description("Creates a timestamped message payload that deprecated since firmware 1.0, kept for compatibility. Writing this register sets Motor0Acceleration to the constant acceleration that reproduces the duration of the old ramp (which removed this many microseconds from the pulse interval on every pulse). Prefer Motor0Acceleration.")]
     public partial class CreateTimestampedMotor0StepAccelerationIntervalPayload : CreateMotor0StepAccelerationIntervalPayload
     {
         /// <summary>
-        /// Creates a timestamped message that configures the acceleration for motor 0. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+        /// Creates a timestamped message that deprecated since firmware 1.0, kept for compatibility. Writing this register sets Motor0Acceleration to the constant acceleration that reproduces the duration of the old ramp (which removed this many microseconds from the pulse interval on every pulse). Prefer Motor0Acceleration.
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -12376,18 +12804,18 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that configures the acceleration for motor 1. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    /// that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor1Acceleration.
     /// </summary>
     [DisplayName("Motor1StepAccelerationIntervalPayload")]
-    [Description("Creates a message payload that configures the acceleration for motor 1. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+    [Description("Creates a message payload that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor1Acceleration.")]
     public partial class CreateMotor1StepAccelerationIntervalPayload
     {
         /// <summary>
-        /// Gets or sets the value that configures the acceleration for motor 1. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+        /// Gets or sets the value that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor1Acceleration.
         /// </summary>
         [Range(min: 2, max: 2000)]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Description("The value that configures the acceleration for motor 1. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+        [Description("The value that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor1Acceleration.")]
         public ushort Motor1StepAccelerationInterval { get; set; } = 10;
 
         /// <summary>
@@ -12400,7 +12828,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that configures the acceleration for motor 1. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+        /// Creates a message that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor1Acceleration.
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the Motor1StepAccelerationInterval register.</returns>
@@ -12412,14 +12840,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that configures the acceleration for motor 1. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    /// that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor1Acceleration.
     /// </summary>
     [DisplayName("TimestampedMotor1StepAccelerationIntervalPayload")]
-    [Description("Creates a timestamped message payload that configures the acceleration for motor 1. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+    [Description("Creates a timestamped message payload that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor1Acceleration.")]
     public partial class CreateTimestampedMotor1StepAccelerationIntervalPayload : CreateMotor1StepAccelerationIntervalPayload
     {
         /// <summary>
-        /// Creates a timestamped message that configures the acceleration for motor 1. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+        /// Creates a timestamped message that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor1Acceleration.
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -12432,18 +12860,18 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that configures the acceleration for motor 2. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    /// that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor2Acceleration.
     /// </summary>
     [DisplayName("Motor2StepAccelerationIntervalPayload")]
-    [Description("Creates a message payload that configures the acceleration for motor 2. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+    [Description("Creates a message payload that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor2Acceleration.")]
     public partial class CreateMotor2StepAccelerationIntervalPayload
     {
         /// <summary>
-        /// Gets or sets the value that configures the acceleration for motor 2. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+        /// Gets or sets the value that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor2Acceleration.
         /// </summary>
         [Range(min: 2, max: 2000)]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Description("The value that configures the acceleration for motor 2. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+        [Description("The value that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor2Acceleration.")]
         public ushort Motor2StepAccelerationInterval { get; set; } = 10;
 
         /// <summary>
@@ -12456,7 +12884,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that configures the acceleration for motor 2. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+        /// Creates a message that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor2Acceleration.
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the Motor2StepAccelerationInterval register.</returns>
@@ -12468,14 +12896,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that configures the acceleration for motor 2. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    /// that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor2Acceleration.
     /// </summary>
     [DisplayName("TimestampedMotor2StepAccelerationIntervalPayload")]
-    [Description("Creates a timestamped message payload that configures the acceleration for motor 2. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+    [Description("Creates a timestamped message payload that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor2Acceleration.")]
     public partial class CreateTimestampedMotor2StepAccelerationIntervalPayload : CreateMotor2StepAccelerationIntervalPayload
     {
         /// <summary>
-        /// Creates a timestamped message that configures the acceleration for motor 2. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+        /// Creates a timestamped message that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor2Acceleration.
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -12488,18 +12916,18 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that configures the acceleration for motor 3. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    /// that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor3Acceleration.
     /// </summary>
     [DisplayName("Motor3StepAccelerationIntervalPayload")]
-    [Description("Creates a message payload that configures the acceleration for motor 3. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+    [Description("Creates a message payload that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor3Acceleration.")]
     public partial class CreateMotor3StepAccelerationIntervalPayload
     {
         /// <summary>
-        /// Gets or sets the value that configures the acceleration for motor 3. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+        /// Gets or sets the value that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor3Acceleration.
         /// </summary>
         [Range(min: 2, max: 2000)]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Description("The value that configures the acceleration for motor 3. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+        [Description("The value that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor3Acceleration.")]
         public ushort Motor3StepAccelerationInterval { get; set; } = 10;
 
         /// <summary>
@@ -12512,7 +12940,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that configures the acceleration for motor 3. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+        /// Creates a message that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor3Acceleration.
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the Motor3StepAccelerationInterval register.</returns>
@@ -12524,14 +12952,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that configures the acceleration for motor 3. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+    /// that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor3Acceleration.
     /// </summary>
     [DisplayName("TimestampedMotor3StepAccelerationIntervalPayload")]
-    [Description("Creates a timestamped message payload that configures the acceleration for motor 3. The time between step pulses is decreased by this value when accelerating and increased when decelerating.")]
+    [Description("Creates a timestamped message payload that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor3Acceleration.")]
     public partial class CreateTimestampedMotor3StepAccelerationIntervalPayload : CreateMotor3StepAccelerationIntervalPayload
     {
         /// <summary>
-        /// Creates a timestamped message that configures the acceleration for motor 3. The time between step pulses is decreased by this value when accelerating and increased when decelerating.
+        /// Creates a timestamped message that deprecated since firmware 1.0, see Motor0StepAccelerationInterval. Prefer Motor3Acceleration.
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -14790,10 +15218,10 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that starts the movement of all motors with the step interval defined by this array. The value's signal defines the direction.
+    /// that runs all motors continuously at the step interval (us) given by this array, without acceleration ramp; the sign gives the direction and 0 stops. Since firmware 1.0 speed changes and stops take effect within 1 ms, a direction change stops the motor before reversing, travel limits are honoured, and the write is refused if the pulse rates of all moving motors would exceed the CPU budget.
     /// </summary>
     [DisplayName("StepRelativePayload")]
-    [Description("Creates a message payload that starts the movement of all motors with the step interval defined by this array. The value's signal defines the direction.")]
+    [Description("Creates a message payload that runs all motors continuously at the step interval (us) given by this array, without acceleration ramp; the sign gives the direction and 0 stops. Since firmware 1.0 speed changes and stops take effect within 1 ms, a direction change stops the motor before reversing, travel limits are honoured, and the write is refused if the pulse rates of all moving motors would exceed the CPU budget.")]
     public partial class CreateStepRelativePayload
     {
         /// <summary>
@@ -14835,7 +15263,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that starts the movement of all motors with the step interval defined by this array. The value's signal defines the direction.
+        /// Creates a message that runs all motors continuously at the step interval (us) given by this array, without acceleration ramp; the sign gives the direction and 0 stops. Since firmware 1.0 speed changes and stops take effect within 1 ms, a direction change stops the motor before reversing, travel limits are honoured, and the write is refused if the pulse rates of all moving motors would exceed the CPU budget.
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the StepRelative register.</returns>
@@ -14847,14 +15275,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that starts the movement of all motors with the step interval defined by this array. The value's signal defines the direction.
+    /// that runs all motors continuously at the step interval (us) given by this array, without acceleration ramp; the sign gives the direction and 0 stops. Since firmware 1.0 speed changes and stops take effect within 1 ms, a direction change stops the motor before reversing, travel limits are honoured, and the write is refused if the pulse rates of all moving motors would exceed the CPU budget.
     /// </summary>
     [DisplayName("TimestampedStepRelativePayload")]
-    [Description("Creates a timestamped message payload that starts the movement of all motors with the step interval defined by this array. The value's signal defines the direction.")]
+    [Description("Creates a timestamped message payload that runs all motors continuously at the step interval (us) given by this array, without acceleration ramp; the sign gives the direction and 0 stops. Since firmware 1.0 speed changes and stops take effect within 1 ms, a direction change stops the motor before reversing, travel limits are honoured, and the write is refused if the pulse rates of all moving motors would exceed the CPU budget.")]
     public partial class CreateTimestampedStepRelativePayload : CreateStepRelativePayload
     {
         /// <summary>
-        /// Creates a timestamped message that starts the movement of all motors with the step interval defined by this array. The value's signal defines the direction.
+        /// Creates a timestamped message that runs all motors continuously at the step interval (us) given by this array, without acceleration ramp; the sign gives the direction and 0 stops. Since firmware 1.0 speed changes and stops take effect within 1 ms, a direction change stops the motor before reversing, travel limits are honoured, and the write is refused if the pulse rates of all moving motors would exceed the CPU budget.
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -14867,16 +15295,16 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that starts the movement of motor 0 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    /// that runs motor 0 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
     /// </summary>
     [DisplayName("Motor0StepRelativePayload")]
-    [Description("Creates a message payload that starts the movement of motor 0 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+    [Description("Creates a message payload that runs motor 0 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
     public partial class CreateMotor0StepRelativePayload
     {
         /// <summary>
-        /// Gets or sets the value that starts the movement of motor 0 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+        /// Gets or sets the value that runs motor 0 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
         /// </summary>
-        [Description("The value that starts the movement of motor 0 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+        [Description("The value that runs motor 0 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
         public int Motor0StepRelative { get; set; }
 
         /// <summary>
@@ -14889,7 +15317,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that starts the movement of motor 0 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+        /// Creates a message that runs motor 0 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the Motor0StepRelative register.</returns>
@@ -14901,14 +15329,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that starts the movement of motor 0 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    /// that runs motor 0 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
     /// </summary>
     [DisplayName("TimestampedMotor0StepRelativePayload")]
-    [Description("Creates a timestamped message payload that starts the movement of motor 0 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+    [Description("Creates a timestamped message payload that runs motor 0 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
     public partial class CreateTimestampedMotor0StepRelativePayload : CreateMotor0StepRelativePayload
     {
         /// <summary>
-        /// Creates a timestamped message that starts the movement of motor 0 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+        /// Creates a timestamped message that runs motor 0 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -14921,16 +15349,16 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that starts the movement of motor 1 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    /// that runs motor 1 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
     /// </summary>
     [DisplayName("Motor1StepRelativePayload")]
-    [Description("Creates a message payload that starts the movement of motor 1 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+    [Description("Creates a message payload that runs motor 1 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
     public partial class CreateMotor1StepRelativePayload
     {
         /// <summary>
-        /// Gets or sets the value that starts the movement of motor 1 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+        /// Gets or sets the value that runs motor 1 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
         /// </summary>
-        [Description("The value that starts the movement of motor 1 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+        [Description("The value that runs motor 1 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
         public int Motor1StepRelative { get; set; }
 
         /// <summary>
@@ -14943,7 +15371,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that starts the movement of motor 1 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+        /// Creates a message that runs motor 1 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the Motor1StepRelative register.</returns>
@@ -14955,14 +15383,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that starts the movement of motor 1 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    /// that runs motor 1 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
     /// </summary>
     [DisplayName("TimestampedMotor1StepRelativePayload")]
-    [Description("Creates a timestamped message payload that starts the movement of motor 1 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+    [Description("Creates a timestamped message payload that runs motor 1 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
     public partial class CreateTimestampedMotor1StepRelativePayload : CreateMotor1StepRelativePayload
     {
         /// <summary>
-        /// Creates a timestamped message that starts the movement of motor 1 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+        /// Creates a timestamped message that runs motor 1 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -14975,16 +15403,16 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that starts the movement of motor 2 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    /// that runs motor 2 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
     /// </summary>
     [DisplayName("Motor2StepRelativePayload")]
-    [Description("Creates a message payload that starts the movement of motor 2 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+    [Description("Creates a message payload that runs motor 2 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
     public partial class CreateMotor2StepRelativePayload
     {
         /// <summary>
-        /// Gets or sets the value that starts the movement of motor 2 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+        /// Gets or sets the value that runs motor 2 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
         /// </summary>
-        [Description("The value that starts the movement of motor 2 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+        [Description("The value that runs motor 2 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
         public int Motor2StepRelative { get; set; }
 
         /// <summary>
@@ -14997,7 +15425,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that starts the movement of motor 2 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+        /// Creates a message that runs motor 2 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the Motor2StepRelative register.</returns>
@@ -15009,14 +15437,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that starts the movement of motor 2 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    /// that runs motor 2 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
     /// </summary>
     [DisplayName("TimestampedMotor2StepRelativePayload")]
-    [Description("Creates a timestamped message payload that starts the movement of motor 2 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+    [Description("Creates a timestamped message payload that runs motor 2 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
     public partial class CreateTimestampedMotor2StepRelativePayload : CreateMotor2StepRelativePayload
     {
         /// <summary>
-        /// Creates a timestamped message that starts the movement of motor 2 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+        /// Creates a timestamped message that runs motor 2 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -15029,16 +15457,16 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that starts the movement of motor 3 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    /// that runs motor 3 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
     /// </summary>
     [DisplayName("Motor3StepRelativePayload")]
-    [Description("Creates a message payload that starts the movement of motor 3 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+    [Description("Creates a message payload that runs motor 3 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
     public partial class CreateMotor3StepRelativePayload
     {
         /// <summary>
-        /// Gets or sets the value that starts the movement of motor 3 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+        /// Gets or sets the value that runs motor 3 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
         /// </summary>
-        [Description("The value that starts the movement of motor 3 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+        [Description("The value that runs motor 3 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
         public int Motor3StepRelative { get; set; }
 
         /// <summary>
@@ -15051,7 +15479,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that starts the movement of motor 3 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+        /// Creates a message that runs motor 3 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the Motor3StepRelative register.</returns>
@@ -15063,14 +15491,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that starts the movement of motor 3 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+    /// that runs motor 3 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
     /// </summary>
     [DisplayName("TimestampedMotor3StepRelativePayload")]
-    [Description("Creates a timestamped message payload that starts the movement of motor 3 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.")]
+    [Description("Creates a timestamped message payload that runs motor 3 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.")]
     public partial class CreateTimestampedMotor3StepRelativePayload : CreateMotor3StepRelativePayload
     {
         /// <summary>
-        /// Creates a timestamped message that starts the movement of motor 3 with the step interval defined by this register, disregarding the acceleration protocol. The sign of the value specifies the direction.
+        /// Creates a timestamped message that runs motor 3 continuously at the step interval (us) given by this register, without acceleration ramp. The sign gives the direction and 0 stops. See StepRelative for the firmware 1.0 behaviour.
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -15191,16 +15619,16 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that triggers the quick movement in the correspondent motor with the currently configured settings.
+    /// that triggers a quick movement on motors 1 and/or 2 using the Quick* settings. Since firmware 1.0 this runs the same trapezoidal engine as MoveRelative; the write is refused if the move would exceed the CPU budget (see Motor0Acceleration).
     /// </summary>
     [DisplayName("TriggerQuickMovementPayload")]
-    [Description("Creates a message payload that triggers the quick movement in the correspondent motor with the currently configured settings.")]
+    [Description("Creates a message payload that triggers a quick movement on motors 1 and/or 2 using the Quick* settings. Since firmware 1.0 this runs the same trapezoidal engine as MoveRelative; the write is refused if the move would exceed the CPU budget (see Motor0Acceleration).")]
     public partial class CreateTriggerQuickMovementPayload
     {
         /// <summary>
-        /// Gets or sets the value that triggers the quick movement in the correspondent motor with the currently configured settings.
+        /// Gets or sets the value that triggers a quick movement on motors 1 and/or 2 using the Quick* settings. Since firmware 1.0 this runs the same trapezoidal engine as MoveRelative; the write is refused if the move would exceed the CPU budget (see Motor0Acceleration).
         /// </summary>
-        [Description("The value that triggers the quick movement in the correspondent motor with the currently configured settings.")]
+        [Description("The value that triggers a quick movement on motors 1 and/or 2 using the Quick* settings. Since firmware 1.0 this runs the same trapezoidal engine as MoveRelative; the write is refused if the move would exceed the CPU budget (see Motor0Acceleration).")]
         public StepperMotors TriggerQuickMovement { get; set; }
 
         /// <summary>
@@ -15213,7 +15641,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that triggers the quick movement in the correspondent motor with the currently configured settings.
+        /// Creates a message that triggers a quick movement on motors 1 and/or 2 using the Quick* settings. Since firmware 1.0 this runs the same trapezoidal engine as MoveRelative; the write is refused if the move would exceed the CPU budget (see Motor0Acceleration).
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the TriggerQuickMovement register.</returns>
@@ -15225,14 +15653,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that triggers the quick movement in the correspondent motor with the currently configured settings.
+    /// that triggers a quick movement on motors 1 and/or 2 using the Quick* settings. Since firmware 1.0 this runs the same trapezoidal engine as MoveRelative; the write is refused if the move would exceed the CPU budget (see Motor0Acceleration).
     /// </summary>
     [DisplayName("TimestampedTriggerQuickMovementPayload")]
-    [Description("Creates a timestamped message payload that triggers the quick movement in the correspondent motor with the currently configured settings.")]
+    [Description("Creates a timestamped message payload that triggers a quick movement on motors 1 and/or 2 using the Quick* settings. Since firmware 1.0 this runs the same trapezoidal engine as MoveRelative; the write is refused if the move would exceed the CPU budget (see Motor0Acceleration).")]
     public partial class CreateTimestampedTriggerQuickMovementPayload : CreateTriggerQuickMovementPayload
     {
         /// <summary>
-        /// Creates a timestamped message that triggers the quick movement in the correspondent motor with the currently configured settings.
+        /// Creates a timestamped message that triggers a quick movement on motors 1 and/or 2 using the Quick* settings. Since firmware 1.0 this runs the same trapezoidal engine as MoveRelative; the write is refused if the move would exceed the CPU budget (see Motor0Acceleration).
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -15245,16 +15673,16 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 1.
+    /// that sets the distance travelled per pulse, in micrometers, for quick movements of motor 1 (e.g. 1.25 for 8 microsteps on a 2 mm lead).
     /// </summary>
     [DisplayName("Motor1QuickMovementPulseDistancePayload")]
-    [Description("Creates a message payload that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 1.")]
+    [Description("Creates a message payload that sets the distance travelled per pulse, in micrometers, for quick movements of motor 1 (e.g. 1.25 for 8 microsteps on a 2 mm lead).")]
     public partial class CreateMotor1QuickMovementPulseDistancePayload
     {
         /// <summary>
-        /// Gets or sets the value that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 1.
+        /// Gets or sets the value that sets the distance travelled per pulse, in micrometers, for quick movements of motor 1 (e.g. 1.25 for 8 microsteps on a 2 mm lead).
         /// </summary>
-        [Description("The value that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 1.")]
+        [Description("The value that sets the distance travelled per pulse, in micrometers, for quick movements of motor 1 (e.g. 1.25 for 8 microsteps on a 2 mm lead).")]
         public float Motor1QuickMovementPulseDistance { get; set; }
 
         /// <summary>
@@ -15267,7 +15695,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 1.
+        /// Creates a message that sets the distance travelled per pulse, in micrometers, for quick movements of motor 1 (e.g. 1.25 for 8 microsteps on a 2 mm lead).
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the Motor1QuickMovementPulseDistance register.</returns>
@@ -15279,14 +15707,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 1.
+    /// that sets the distance travelled per pulse, in micrometers, for quick movements of motor 1 (e.g. 1.25 for 8 microsteps on a 2 mm lead).
     /// </summary>
     [DisplayName("TimestampedMotor1QuickMovementPulseDistancePayload")]
-    [Description("Creates a timestamped message payload that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 1.")]
+    [Description("Creates a timestamped message payload that sets the distance travelled per pulse, in micrometers, for quick movements of motor 1 (e.g. 1.25 for 8 microsteps on a 2 mm lead).")]
     public partial class CreateTimestampedMotor1QuickMovementPulseDistancePayload : CreateMotor1QuickMovementPulseDistancePayload
     {
         /// <summary>
-        /// Creates a timestamped message that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 1.
+        /// Creates a timestamped message that sets the distance travelled per pulse, in micrometers, for quick movements of motor 1 (e.g. 1.25 for 8 microsteps on a 2 mm lead).
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -15299,16 +15727,16 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 2.
+    /// that sets the distance travelled per pulse, in micrometers, for quick movements of motor 2.
     /// </summary>
     [DisplayName("Motor2QuickMovementPulseDistancePayload")]
-    [Description("Creates a message payload that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 2.")]
+    [Description("Creates a message payload that sets the distance travelled per pulse, in micrometers, for quick movements of motor 2.")]
     public partial class CreateMotor2QuickMovementPulseDistancePayload
     {
         /// <summary>
-        /// Gets or sets the value that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 2.
+        /// Gets or sets the value that sets the distance travelled per pulse, in micrometers, for quick movements of motor 2.
         /// </summary>
-        [Description("The value that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 2.")]
+        [Description("The value that sets the distance travelled per pulse, in micrometers, for quick movements of motor 2.")]
         public float Motor2QuickMovementPulseDistance { get; set; }
 
         /// <summary>
@@ -15321,7 +15749,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 2.
+        /// Creates a message that sets the distance travelled per pulse, in micrometers, for quick movements of motor 2.
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the Motor2QuickMovementPulseDistance register.</returns>
@@ -15333,14 +15761,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 2.
+    /// that sets the distance travelled per pulse, in micrometers, for quick movements of motor 2.
     /// </summary>
     [DisplayName("TimestampedMotor2QuickMovementPulseDistancePayload")]
-    [Description("Creates a timestamped message payload that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 2.")]
+    [Description("Creates a timestamped message payload that sets the distance travelled per pulse, in micrometers, for quick movements of motor 2.")]
     public partial class CreateTimestampedMotor2QuickMovementPulseDistancePayload : CreateMotor2QuickMovementPulseDistancePayload
     {
         /// <summary>
-        /// Creates a timestamped message that sets the single step pulse distance for a quick movement, in micrometers, for the Motor 2.
+        /// Creates a timestamped message that sets the distance travelled per pulse, in micrometers, for quick movements of motor 2.
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -15731,16 +16159,16 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that sets the travel distance of a quick movement, in millimeters, for the Motor 1.
+    /// that sets the travel distance of a quick movement, in millimeters, for the Motor 2.
     /// </summary>
     [DisplayName("Motor2QuickMovementDistancePayload")]
-    [Description("Creates a message payload that sets the travel distance of a quick movement, in millimeters, for the Motor 1.")]
+    [Description("Creates a message payload that sets the travel distance of a quick movement, in millimeters, for the Motor 2.")]
     public partial class CreateMotor2QuickMovementDistancePayload
     {
         /// <summary>
-        /// Gets or sets the value that sets the travel distance of a quick movement, in millimeters, for the Motor 1.
+        /// Gets or sets the value that sets the travel distance of a quick movement, in millimeters, for the Motor 2.
         /// </summary>
-        [Description("The value that sets the travel distance of a quick movement, in millimeters, for the Motor 1.")]
+        [Description("The value that sets the travel distance of a quick movement, in millimeters, for the Motor 2.")]
         public float Motor2QuickMovementDistance { get; set; }
 
         /// <summary>
@@ -15753,7 +16181,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that sets the travel distance of a quick movement, in millimeters, for the Motor 1.
+        /// Creates a message that sets the travel distance of a quick movement, in millimeters, for the Motor 2.
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the Motor2QuickMovementDistance register.</returns>
@@ -15765,14 +16193,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that sets the travel distance of a quick movement, in millimeters, for the Motor 1.
+    /// that sets the travel distance of a quick movement, in millimeters, for the Motor 2.
     /// </summary>
     [DisplayName("TimestampedMotor2QuickMovementDistancePayload")]
-    [Description("Creates a timestamped message payload that sets the travel distance of a quick movement, in millimeters, for the Motor 1.")]
+    [Description("Creates a timestamped message payload that sets the travel distance of a quick movement, in millimeters, for the Motor 2.")]
     public partial class CreateTimestampedMotor2QuickMovementDistancePayload : CreateMotor2QuickMovementDistancePayload
     {
         /// <summary>
-        /// Creates a timestamped message that sets the travel distance of a quick movement, in millimeters, for the Motor 1.
+        /// Creates a timestamped message that sets the travel distance of a quick movement, in millimeters, for the Motor 2.
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -15780,6 +16208,230 @@ namespace Harp.StepperDriver
         public HarpMessage GetMessage(double timestamp, MessageType messageType)
         {
             return Harp.StepperDriver.Motor2QuickMovementDistance.FromPayload(timestamp, messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a message payload
+    /// that acceleration of motor 0 in steps per second squared, used by every move. The motor accelerates from the speed given by Motor0MaximumStepInterval to the speed given by Motor0StepInterval, cruises, and decelerates symmetrically (trapezoidal profile). Moves are refused when the pulse rates of all moving motors together exceed the device's CPU budget: each motor costs about 2.5 us per pulse and the total must stay below 30% of the CPU (e.g. one motor at 10 us between pulses, or four at 34 us).
+    /// </summary>
+    [DisplayName("Motor0AccelerationPayload")]
+    [Description("Creates a message payload that acceleration of motor 0 in steps per second squared, used by every move. The motor accelerates from the speed given by Motor0MaximumStepInterval to the speed given by Motor0StepInterval, cruises, and decelerates symmetrically (trapezoidal profile). Moves are refused when the pulse rates of all moving motors together exceed the device's CPU budget: each motor costs about 2.5 us per pulse and the total must stay below 30% of the CPU (e.g. one motor at 10 us between pulses, or four at 34 us).")]
+    public partial class CreateMotor0AccelerationPayload
+    {
+        /// <summary>
+        /// Gets or sets the value that acceleration of motor 0 in steps per second squared, used by every move. The motor accelerates from the speed given by Motor0MaximumStepInterval to the speed given by Motor0StepInterval, cruises, and decelerates symmetrically (trapezoidal profile). Moves are refused when the pulse rates of all moving motors together exceed the device's CPU budget: each motor costs about 2.5 us per pulse and the total must stay below 30% of the CPU (e.g. one motor at 10 us between pulses, or four at 34 us).
+        /// </summary>
+        [Range(min: 1, max: long.MaxValue)]
+        [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
+        [Description("The value that acceleration of motor 0 in steps per second squared, used by every move. The motor accelerates from the speed given by Motor0MaximumStepInterval to the speed given by Motor0StepInterval, cruises, and decelerates symmetrically (trapezoidal profile). Moves are refused when the pulse rates of all moving motors together exceed the device's CPU budget: each motor costs about 2.5 us per pulse and the total must stay below 30% of the CPU (e.g. one motor at 10 us between pulses, or four at 34 us).")]
+        public uint Motor0Acceleration { get; set; } = 17778;
+
+        /// <summary>
+        /// Creates a message payload for the Motor0Acceleration register.
+        /// </summary>
+        /// <returns>The created message payload value.</returns>
+        public uint GetPayload()
+        {
+            return Motor0Acceleration;
+        }
+
+        /// <summary>
+        /// Creates a message that acceleration of motor 0 in steps per second squared, used by every move. The motor accelerates from the speed given by Motor0MaximumStepInterval to the speed given by Motor0StepInterval, cruises, and decelerates symmetrically (trapezoidal profile). Moves are refused when the pulse rates of all moving motors together exceed the device's CPU budget: each motor costs about 2.5 us per pulse and the total must stay below 30% of the CPU (e.g. one motor at 10 us between pulses, or four at 34 us).
+        /// </summary>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new message for the Motor0Acceleration register.</returns>
+        public HarpMessage GetMessage(MessageType messageType)
+        {
+            return Harp.StepperDriver.Motor0Acceleration.FromPayload(messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a timestamped message payload
+    /// that acceleration of motor 0 in steps per second squared, used by every move. The motor accelerates from the speed given by Motor0MaximumStepInterval to the speed given by Motor0StepInterval, cruises, and decelerates symmetrically (trapezoidal profile). Moves are refused when the pulse rates of all moving motors together exceed the device's CPU budget: each motor costs about 2.5 us per pulse and the total must stay below 30% of the CPU (e.g. one motor at 10 us between pulses, or four at 34 us).
+    /// </summary>
+    [DisplayName("TimestampedMotor0AccelerationPayload")]
+    [Description("Creates a timestamped message payload that acceleration of motor 0 in steps per second squared, used by every move. The motor accelerates from the speed given by Motor0MaximumStepInterval to the speed given by Motor0StepInterval, cruises, and decelerates symmetrically (trapezoidal profile). Moves are refused when the pulse rates of all moving motors together exceed the device's CPU budget: each motor costs about 2.5 us per pulse and the total must stay below 30% of the CPU (e.g. one motor at 10 us between pulses, or four at 34 us).")]
+    public partial class CreateTimestampedMotor0AccelerationPayload : CreateMotor0AccelerationPayload
+    {
+        /// <summary>
+        /// Creates a timestamped message that acceleration of motor 0 in steps per second squared, used by every move. The motor accelerates from the speed given by Motor0MaximumStepInterval to the speed given by Motor0StepInterval, cruises, and decelerates symmetrically (trapezoidal profile). Moves are refused when the pulse rates of all moving motors together exceed the device's CPU budget: each motor costs about 2.5 us per pulse and the total must stay below 30% of the CPU (e.g. one motor at 10 us between pulses, or four at 34 us).
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new timestamped message for the Motor0Acceleration register.</returns>
+        public HarpMessage GetMessage(double timestamp, MessageType messageType)
+        {
+            return Harp.StepperDriver.Motor0Acceleration.FromPayload(timestamp, messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a message payload
+    /// that acceleration of motor 1 in steps per second squared, used by every move.
+    /// </summary>
+    [DisplayName("Motor1AccelerationPayload")]
+    [Description("Creates a message payload that acceleration of motor 1 in steps per second squared, used by every move.")]
+    public partial class CreateMotor1AccelerationPayload
+    {
+        /// <summary>
+        /// Gets or sets the value that acceleration of motor 1 in steps per second squared, used by every move.
+        /// </summary>
+        [Range(min: 1, max: long.MaxValue)]
+        [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
+        [Description("The value that acceleration of motor 1 in steps per second squared, used by every move.")]
+        public uint Motor1Acceleration { get; set; } = 17778;
+
+        /// <summary>
+        /// Creates a message payload for the Motor1Acceleration register.
+        /// </summary>
+        /// <returns>The created message payload value.</returns>
+        public uint GetPayload()
+        {
+            return Motor1Acceleration;
+        }
+
+        /// <summary>
+        /// Creates a message that acceleration of motor 1 in steps per second squared, used by every move.
+        /// </summary>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new message for the Motor1Acceleration register.</returns>
+        public HarpMessage GetMessage(MessageType messageType)
+        {
+            return Harp.StepperDriver.Motor1Acceleration.FromPayload(messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a timestamped message payload
+    /// that acceleration of motor 1 in steps per second squared, used by every move.
+    /// </summary>
+    [DisplayName("TimestampedMotor1AccelerationPayload")]
+    [Description("Creates a timestamped message payload that acceleration of motor 1 in steps per second squared, used by every move.")]
+    public partial class CreateTimestampedMotor1AccelerationPayload : CreateMotor1AccelerationPayload
+    {
+        /// <summary>
+        /// Creates a timestamped message that acceleration of motor 1 in steps per second squared, used by every move.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new timestamped message for the Motor1Acceleration register.</returns>
+        public HarpMessage GetMessage(double timestamp, MessageType messageType)
+        {
+            return Harp.StepperDriver.Motor1Acceleration.FromPayload(timestamp, messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a message payload
+    /// that acceleration of motor 2 in steps per second squared, used by every move.
+    /// </summary>
+    [DisplayName("Motor2AccelerationPayload")]
+    [Description("Creates a message payload that acceleration of motor 2 in steps per second squared, used by every move.")]
+    public partial class CreateMotor2AccelerationPayload
+    {
+        /// <summary>
+        /// Gets or sets the value that acceleration of motor 2 in steps per second squared, used by every move.
+        /// </summary>
+        [Range(min: 1, max: long.MaxValue)]
+        [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
+        [Description("The value that acceleration of motor 2 in steps per second squared, used by every move.")]
+        public uint Motor2Acceleration { get; set; } = 17778;
+
+        /// <summary>
+        /// Creates a message payload for the Motor2Acceleration register.
+        /// </summary>
+        /// <returns>The created message payload value.</returns>
+        public uint GetPayload()
+        {
+            return Motor2Acceleration;
+        }
+
+        /// <summary>
+        /// Creates a message that acceleration of motor 2 in steps per second squared, used by every move.
+        /// </summary>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new message for the Motor2Acceleration register.</returns>
+        public HarpMessage GetMessage(MessageType messageType)
+        {
+            return Harp.StepperDriver.Motor2Acceleration.FromPayload(messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a timestamped message payload
+    /// that acceleration of motor 2 in steps per second squared, used by every move.
+    /// </summary>
+    [DisplayName("TimestampedMotor2AccelerationPayload")]
+    [Description("Creates a timestamped message payload that acceleration of motor 2 in steps per second squared, used by every move.")]
+    public partial class CreateTimestampedMotor2AccelerationPayload : CreateMotor2AccelerationPayload
+    {
+        /// <summary>
+        /// Creates a timestamped message that acceleration of motor 2 in steps per second squared, used by every move.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new timestamped message for the Motor2Acceleration register.</returns>
+        public HarpMessage GetMessage(double timestamp, MessageType messageType)
+        {
+            return Harp.StepperDriver.Motor2Acceleration.FromPayload(timestamp, messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a message payload
+    /// that acceleration of motor 3 in steps per second squared, used by every move.
+    /// </summary>
+    [DisplayName("Motor3AccelerationPayload")]
+    [Description("Creates a message payload that acceleration of motor 3 in steps per second squared, used by every move.")]
+    public partial class CreateMotor3AccelerationPayload
+    {
+        /// <summary>
+        /// Gets or sets the value that acceleration of motor 3 in steps per second squared, used by every move.
+        /// </summary>
+        [Range(min: 1, max: long.MaxValue)]
+        [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
+        [Description("The value that acceleration of motor 3 in steps per second squared, used by every move.")]
+        public uint Motor3Acceleration { get; set; } = 17778;
+
+        /// <summary>
+        /// Creates a message payload for the Motor3Acceleration register.
+        /// </summary>
+        /// <returns>The created message payload value.</returns>
+        public uint GetPayload()
+        {
+            return Motor3Acceleration;
+        }
+
+        /// <summary>
+        /// Creates a message that acceleration of motor 3 in steps per second squared, used by every move.
+        /// </summary>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new message for the Motor3Acceleration register.</returns>
+        public HarpMessage GetMessage(MessageType messageType)
+        {
+            return Harp.StepperDriver.Motor3Acceleration.FromPayload(messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a timestamped message payload
+    /// that acceleration of motor 3 in steps per second squared, used by every move.
+    /// </summary>
+    [DisplayName("TimestampedMotor3AccelerationPayload")]
+    [Description("Creates a timestamped message payload that acceleration of motor 3 in steps per second squared, used by every move.")]
+    public partial class CreateTimestampedMotor3AccelerationPayload : CreateMotor3AccelerationPayload
+    {
+        /// <summary>
+        /// Creates a timestamped message that acceleration of motor 3 in steps per second squared, used by every move.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new timestamped message for the Motor3Acceleration register.</returns>
+        public HarpMessage GetMessage(double timestamp, MessageType messageType)
+        {
+            return Harp.StepperDriver.Motor3Acceleration.FromPayload(timestamp, messageType, GetPayload());
         }
     }
 
@@ -16367,7 +17019,7 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Specifies the inputs operation mode.
+    /// Specifies the inputs operation mode. Rising and Falling refer to the DigitalInputState bit of the input, which is 1 while the (pulled-up) input line is low: StopMotorOnFalling stops the motor when the line goes high, StopMotorOnRising when it goes low.
     /// </summary>
     public enum InputOpModeConfig : byte
     {
