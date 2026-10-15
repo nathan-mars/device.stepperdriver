@@ -4,3 +4,5 @@
 .nuget
 bin
 obj
+__pycache__/
+Assets/trapezoidal-motion-explainer.pdf
