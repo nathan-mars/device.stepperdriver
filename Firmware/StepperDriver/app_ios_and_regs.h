@@ -479,6 +479,10 @@ typedef struct
 	float REG_MOTOR2_QUICK_ACCELERATION;
 	float REG_MOTOR1_QUICK_DISTANCE;
 	float REG_MOTOR2_QUICK_DISTANCE;
+	uint32_t REG_MOTOR0_ACCELERATION;
+	uint32_t REG_MOTOR1_ACCELERATION;
+	uint32_t REG_MOTOR2_ACCELERATION;
+	uint32_t REG_MOTOR3_ACCELERATION;
 } AppRegs;
 
 /************************************************************************/
@@ -594,6 +598,10 @@ typedef struct
 #define ADD_REG_MOTOR2_QUICK_ACCELERATION  138 // FLOAT  Configures the motor's acceleration in m/s2 for motor 2.
 #define ADD_REG_MOTOR1_QUICK_DISTANCE      139 // FLOAT  Configures the motor's travel distance in mm for motor 1.
 #define ADD_REG_MOTOR2_QUICK_DISTANCE      140 // FLOAT  Configures the motor's travel distance in mm for motor 2.
+#define ADD_REG_MOTOR0_ACCELERATION        141 // U32    Acceleration of motor 0 in steps/s^2 (trapezoidal profile).
+#define ADD_REG_MOTOR1_ACCELERATION        142 // U32    Acceleration of motor 1 in steps/s^2 (trapezoidal profile).
+#define ADD_REG_MOTOR2_ACCELERATION        143 // U32    Acceleration of motor 2 in steps/s^2 (trapezoidal profile).
+#define ADD_REG_MOTOR3_ACCELERATION        144 // U32    Acceleration of motor 3 in steps/s^2 (trapezoidal profile).
 
 /************************************************************************/
 /* PWM Generator registers' memory limits                               */
@@ -603,8 +611,8 @@ typedef struct
 /************************************************************************/
 /* Memory limits */
 #define APP_REGS_ADD_MIN                    0x20
-#define APP_REGS_ADD_MAX                    0x8C
-#define APP_NBYTES_OF_REG_BANK              338
+#define APP_REGS_ADD_MAX                    0x90
+#define APP_NBYTES_OF_REG_BANK              354
 
 /************************************************************************/
 /* Registers' bits                                                      */

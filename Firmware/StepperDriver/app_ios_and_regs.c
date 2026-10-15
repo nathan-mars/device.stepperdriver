@@ -245,7 +245,11 @@ uint8_t app_regs_type[] = {
 	TYPE_FLOAT,
 	TYPE_FLOAT,
 	TYPE_FLOAT,
-	TYPE_FLOAT
+	TYPE_FLOAT,
+	TYPE_U32,
+	TYPE_U32,
+	TYPE_U32,
+	TYPE_U32
 };
 
 uint16_t app_regs_n_elements[] = {
@@ -323,6 +327,10 @@ uint16_t app_regs_n_elements[] = {
 	1,
 	1,
 	4,
+	1,
+	1,
+	1,
+	1,
 	1,
 	1,
 	1,
@@ -469,5 +477,9 @@ uint8_t *app_regs_pointer[] = {
 	(uint8_t*)(&app_regs.REG_MOTOR1_QUICK_ACCELERATION),
 	(uint8_t*)(&app_regs.REG_MOTOR2_QUICK_ACCELERATION),
 	(uint8_t*)(&app_regs.REG_MOTOR1_QUICK_DISTANCE),
-	(uint8_t*)(&app_regs.REG_MOTOR2_QUICK_DISTANCE)
+	(uint8_t*)(&app_regs.REG_MOTOR2_QUICK_DISTANCE),
+	(uint8_t*)(&app_regs.REG_MOTOR0_ACCELERATION),
+	(uint8_t*)(&app_regs.REG_MOTOR1_ACCELERATION),
+	(uint8_t*)(&app_regs.REG_MOTOR2_ACCELERATION),
+	(uint8_t*)(&app_regs.REG_MOTOR3_ACCELERATION)
 };
