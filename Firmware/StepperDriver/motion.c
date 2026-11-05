@@ -12,6 +12,7 @@ static int32_t *pos_reg;
 static int32_t  max_lim[MOTION_MOTORS];
 static int32_t  min_lim[MOTION_MOTORS];
 static uint8_t        stopped_mask;
+static uint8_t        no_limits_mask;   /* axes whose travel limits are suspended (homing) */
 
 /* ------------------------------------------------------------------------ */
 /* Helpers                                                                   */
@@ -55,6 +56,7 @@ static void write_pos(uint8_t i, int32_t p)
  * (reaching the limit exactly is allowed). INT32_MAX when the limit is off. */
 static int32_t room_to_limit(uint8_t i, int32_t from_pos, bool positive)
 {
+	if (no_limits_mask & (1u << i)) return INT32_MAX;
 	int32_t lim = positive ? max_lim[i] : min_lim[i];
 	if (lim == 0) return INT32_MAX;
 	int32_t room = positive ? lim - from_pos : from_pos - lim;
@@ -74,6 +76,7 @@ void motion_init(int32_t *pos)
 {
 	pos_reg = pos;
 	stopped_mask = 0;
+	no_limits_mask = 0;
 	for (uint8_t i = 0; i < MOTION_MOTORS; i++) {
 		motion_t *m = &motion[i];
 		max_lim[i] = 0; min_lim[i] = 0;
@@ -88,6 +91,12 @@ void motion_init(int32_t *pos)
 void motion_set_limits(uint8_t i, int32_t minl, int32_t maxl)
 {
 	min_lim[i] = minl; max_lim[i] = maxl;
+}
+
+void motion_ignore_limits(uint8_t i, bool ignore)
+{
+	if (ignore) no_limits_mask |= (uint8_t)(1u << i);
+	else        no_limits_mask &= (uint8_t)~(1u << i);
 }
 
 void motion_set_profile(uint8_t i, float v0, float vmax, float a)
@@ -125,15 +134,19 @@ uint32_t motion_legacy_accel(uint16_t nominal_us, uint16_t start_us, uint16_t dp
 /* ------------------------------------------------------------------------ */
 /* Admission control                                                         */
 /* ------------------------------------------------------------------------ */
-static uint16_t running_cost_except(uint8_t i)
+uint16_t motion_cost_permille(float v) { return cost_of(v); }
+
+uint16_t motion_running_cost_permille(uint8_t exclude_mask)
 {
 	uint16_t sum = 0;
 	for (uint8_t k = 0; k < MOTION_MOTORS; k++) {
-		if (k == i || !motion[k].running) continue;
+		if ((exclude_mask & (1u << k)) || !motion[k].running) continue;
 		sum += motion[k].jog ? cost_of(motion[k].jog_v) : motion[k].cost_permille;
 	}
 	return sum;
 }
+
+static uint16_t running_cost_except(uint8_t i) { return motion_running_cost_permille((uint8_t)(1u << i)); }
 
 bool motion_admit(uint8_t i)
 {

@@ -149,7 +149,14 @@ namespace Harp.StepperDriver
             { 141, typeof(Motor0Acceleration) },
             { 142, typeof(Motor1Acceleration) },
             { 143, typeof(Motor2Acceleration) },
-            { 144, typeof(Motor3Acceleration) }
+            { 144, typeof(Motor3Acceleration) },
+            { 145, typeof(HomeMotors) },
+            { 146, typeof(HomingState) },
+            { 147, typeof(HomingConfig) },
+            { 148, typeof(HomingStepInterval) },
+            { 149, typeof(HomingSlowStepInterval) },
+            { 150, typeof(HomingSearchDistance) },
+            { 151, typeof(HomingBackoff) }
         };
 
         /// <summary>
@@ -458,6 +465,13 @@ namespace Harp.StepperDriver
     /// <seealso cref="Motor1Acceleration"/>
     /// <seealso cref="Motor2Acceleration"/>
     /// <seealso cref="Motor3Acceleration"/>
+    /// <seealso cref="HomeMotors"/>
+    /// <seealso cref="HomingState"/>
+    /// <seealso cref="HomingConfig"/>
+    /// <seealso cref="HomingStepInterval"/>
+    /// <seealso cref="HomingSlowStepInterval"/>
+    /// <seealso cref="HomingSearchDistance"/>
+    /// <seealso cref="HomingBackoff"/>
     [XmlInclude(typeof(EnableDriver))]
     [XmlInclude(typeof(DisableDriver))]
     [XmlInclude(typeof(EnableEncoders))]
@@ -553,6 +567,13 @@ namespace Harp.StepperDriver
     [XmlInclude(typeof(Motor1Acceleration))]
     [XmlInclude(typeof(Motor2Acceleration))]
     [XmlInclude(typeof(Motor3Acceleration))]
+    [XmlInclude(typeof(HomeMotors))]
+    [XmlInclude(typeof(HomingState))]
+    [XmlInclude(typeof(HomingConfig))]
+    [XmlInclude(typeof(HomingStepInterval))]
+    [XmlInclude(typeof(HomingSlowStepInterval))]
+    [XmlInclude(typeof(HomingSearchDistance))]
+    [XmlInclude(typeof(HomingBackoff))]
     [Description("Filters register-specific messages reported by the StepperDriver device.")]
     public class FilterRegister : FilterRegisterBuilder, INamedElement
     {
@@ -669,6 +690,13 @@ namespace Harp.StepperDriver
     /// <seealso cref="Motor1Acceleration"/>
     /// <seealso cref="Motor2Acceleration"/>
     /// <seealso cref="Motor3Acceleration"/>
+    /// <seealso cref="HomeMotors"/>
+    /// <seealso cref="HomingState"/>
+    /// <seealso cref="HomingConfig"/>
+    /// <seealso cref="HomingStepInterval"/>
+    /// <seealso cref="HomingSlowStepInterval"/>
+    /// <seealso cref="HomingSearchDistance"/>
+    /// <seealso cref="HomingBackoff"/>
     [XmlInclude(typeof(EnableDriver))]
     [XmlInclude(typeof(DisableDriver))]
     [XmlInclude(typeof(EnableEncoders))]
@@ -764,6 +792,13 @@ namespace Harp.StepperDriver
     [XmlInclude(typeof(Motor1Acceleration))]
     [XmlInclude(typeof(Motor2Acceleration))]
     [XmlInclude(typeof(Motor3Acceleration))]
+    [XmlInclude(typeof(HomeMotors))]
+    [XmlInclude(typeof(HomingState))]
+    [XmlInclude(typeof(HomingConfig))]
+    [XmlInclude(typeof(HomingStepInterval))]
+    [XmlInclude(typeof(HomingSlowStepInterval))]
+    [XmlInclude(typeof(HomingSearchDistance))]
+    [XmlInclude(typeof(HomingBackoff))]
     [XmlInclude(typeof(TimestampedEnableDriver))]
     [XmlInclude(typeof(TimestampedDisableDriver))]
     [XmlInclude(typeof(TimestampedEnableEncoders))]
@@ -859,6 +894,13 @@ namespace Harp.StepperDriver
     [XmlInclude(typeof(TimestampedMotor1Acceleration))]
     [XmlInclude(typeof(TimestampedMotor2Acceleration))]
     [XmlInclude(typeof(TimestampedMotor3Acceleration))]
+    [XmlInclude(typeof(TimestampedHomeMotors))]
+    [XmlInclude(typeof(TimestampedHomingState))]
+    [XmlInclude(typeof(TimestampedHomingConfig))]
+    [XmlInclude(typeof(TimestampedHomingStepInterval))]
+    [XmlInclude(typeof(TimestampedHomingSlowStepInterval))]
+    [XmlInclude(typeof(TimestampedHomingSearchDistance))]
+    [XmlInclude(typeof(TimestampedHomingBackoff))]
     [Description("Filters and selects specific messages reported by the StepperDriver device.")]
     public partial class Parse : ParseBuilder, INamedElement
     {
@@ -972,6 +1014,13 @@ namespace Harp.StepperDriver
     /// <seealso cref="Motor1Acceleration"/>
     /// <seealso cref="Motor2Acceleration"/>
     /// <seealso cref="Motor3Acceleration"/>
+    /// <seealso cref="HomeMotors"/>
+    /// <seealso cref="HomingState"/>
+    /// <seealso cref="HomingConfig"/>
+    /// <seealso cref="HomingStepInterval"/>
+    /// <seealso cref="HomingSlowStepInterval"/>
+    /// <seealso cref="HomingSearchDistance"/>
+    /// <seealso cref="HomingBackoff"/>
     [XmlInclude(typeof(EnableDriver))]
     [XmlInclude(typeof(DisableDriver))]
     [XmlInclude(typeof(EnableEncoders))]
@@ -1067,6 +1116,13 @@ namespace Harp.StepperDriver
     [XmlInclude(typeof(Motor1Acceleration))]
     [XmlInclude(typeof(Motor2Acceleration))]
     [XmlInclude(typeof(Motor3Acceleration))]
+    [XmlInclude(typeof(HomeMotors))]
+    [XmlInclude(typeof(HomingState))]
+    [XmlInclude(typeof(HomingConfig))]
+    [XmlInclude(typeof(HomingStepInterval))]
+    [XmlInclude(typeof(HomingSlowStepInterval))]
+    [XmlInclude(typeof(HomingSearchDistance))]
+    [XmlInclude(typeof(HomingBackoff))]
     [Description("Formats a sequence of values as specific StepperDriver register messages.")]
     public partial class Format : FormatBuilder, INamedElement
     {
@@ -10800,6 +10856,806 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
+    /// Represents a register that starts homing the motors in the bit mask against the endstop configured in HomingConfig. Each motor runs its own sequence: if the sensor is already triggered it first moves away until it releases (at most 4 x HomingBackoff pulses), then searches toward it at HomingStepInterval (at most HomingSearchDistance pulses), backs off by HomingBackoff pulses, and approaches again at HomingSlowStepInterval (at most 2 x HomingBackoff pulses). The sensor is caught in an interrupt and the motor stops at the next pulse; that point becomes position 0. A motor that is moving is stopped first. Motors already homing are not restarted, so a later write can add motors while others are still homing. The write is refused if a selected driver is disabled, its HomingSearchDistance is 0, or the motors would exceed the CPU budget (see Motor0Acceleration). While homing, the motor's travel limits are ignored (the limit registers are not changed), moves written to it are refused, InputNOpMode stops do not apply to it, and it emits no MotorStopped events; the outcome is reported by HomingState. StopMotors cancels homing, and DisableDigitalInputs is refused for an endstop input in use. Acceleration and start speed come from MotorNAcceleration and MotorNMaximumStepInterval.
+    /// </summary>
+    [Description("Starts homing the motors in the bit mask against the endstop configured in HomingConfig. Each motor runs its own sequence: if the sensor is already triggered it first moves away until it releases (at most 4 x HomingBackoff pulses), then searches toward it at HomingStepInterval (at most HomingSearchDistance pulses), backs off by HomingBackoff pulses, and approaches again at HomingSlowStepInterval (at most 2 x HomingBackoff pulses). The sensor is caught in an interrupt and the motor stops at the next pulse; that point becomes position 0. A motor that is moving is stopped first. Motors already homing are not restarted, so a later write can add motors while others are still homing. The write is refused if a selected driver is disabled, its HomingSearchDistance is 0, or the motors would exceed the CPU budget (see Motor0Acceleration). While homing, the motor's travel limits are ignored (the limit registers are not changed), moves written to it are refused, InputNOpMode stops do not apply to it, and it emits no MotorStopped events; the outcome is reported by HomingState. StopMotors cancels homing, and DisableDigitalInputs is refused for an endstop input in use. Acceleration and start speed come from MotorNAcceleration and MotorNMaximumStepInterval.")]
+    public partial class HomeMotors
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="HomeMotors"/> register. This field is constant.
+        /// </summary>
+        public const int Address = 145;
+
+        /// <summary>
+        /// Represents the payload type of the <see cref="HomeMotors"/> register. This field is constant.
+        /// </summary>
+        public const PayloadType RegisterType = PayloadType.U8;
+
+        /// <summary>
+        /// Represents the length of the <see cref="HomeMotors"/> register. This field is constant.
+        /// </summary>
+        public const int RegisterLength = 1;
+
+        /// <summary>
+        /// Returns the payload data for <see cref="HomeMotors"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the message payload.</returns>
+        public static StepperMotors GetPayload(HarpMessage message)
+        {
+            return (StepperMotors)message.GetPayloadByte();
+        }
+
+        /// <summary>
+        /// Returns the timestamped payload data for <see cref="HomeMotors"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<StepperMotors> GetTimestampedPayload(HarpMessage message)
+        {
+            var payload = message.GetTimestampedPayloadByte();
+            return Timestamped.Create((StepperMotors)payload.Value, payload.Seconds);
+        }
+
+        /// <summary>
+        /// Returns a Harp message for the <see cref="HomeMotors"/> register.
+        /// </summary>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="HomeMotors"/> register
+        /// with the specified message type and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(MessageType messageType, StepperMotors value)
+        {
+            return HarpMessage.FromByte(Address, messageType, (byte)value);
+        }
+
+        /// <summary>
+        /// Returns a timestamped Harp message for the <see cref="HomeMotors"/>
+        /// register.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="HomeMotors"/> register
+        /// with the specified message type, timestamp, and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(double timestamp, MessageType messageType, StepperMotors value)
+        {
+            return HarpMessage.FromByte(Address, timestamp, messageType, (byte)value);
+        }
+    }
+
+    /// <summary>
+    /// Provides methods for manipulating timestamped messages from the
+    /// HomeMotors register.
+    /// </summary>
+    /// <seealso cref="HomeMotors"/>
+    [Description("Filters and selects timestamped messages from the HomeMotors register.")]
+    public partial class TimestampedHomeMotors
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="HomeMotors"/> register. This field is constant.
+        /// </summary>
+        public const int Address = HomeMotors.Address;
+
+        /// <summary>
+        /// Returns timestamped payload data for <see cref="HomeMotors"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<StepperMotors> GetPayload(HarpMessage message)
+        {
+            return HomeMotors.GetTimestampedPayload(message);
+        }
+    }
+
+    /// <summary>
+    /// Represents a register that homing state of all motors, emitted whenever it changes. A motor is homed after a successful homing; it is no longer homed when homing starts again, fails or is cancelled, when its driver is disabled, or on a driver error or emergency stop.
+    /// </summary>
+    [Description("Homing state of all motors, emitted whenever it changes. A motor is homed after a successful homing; it is no longer homed when homing starts again, fails or is cancelled, when its driver is disabled, or on a driver error or emergency stop.")]
+    public partial class HomingState
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="HomingState"/> register. This field is constant.
+        /// </summary>
+        public const int Address = 146;
+
+        /// <summary>
+        /// Represents the payload type of the <see cref="HomingState"/> register. This field is constant.
+        /// </summary>
+        public const PayloadType RegisterType = PayloadType.U8;
+
+        /// <summary>
+        /// Represents the length of the <see cref="HomingState"/> register. This field is constant.
+        /// </summary>
+        public const int RegisterLength = 1;
+
+        static HomingStatePayload ParsePayload(byte payload)
+        {
+            HomingStatePayload result;
+            result.Homed = (StepperMotors)(byte)(payload & 0xF);
+            result.Homing = (StepperMotors)(byte)((payload & 0xF0) >> 4);
+            return result;
+        }
+
+        static byte FormatPayload(HomingStatePayload value)
+        {
+            byte result;
+            result = (byte)((byte)value.Homed & 0xF);
+            result |= (byte)(((byte)value.Homing << 4) & 0xF0);
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the payload data for <see cref="HomingState"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the message payload.</returns>
+        public static HomingStatePayload GetPayload(HarpMessage message)
+        {
+            return ParsePayload(message.GetPayloadByte());
+        }
+
+        /// <summary>
+        /// Returns the timestamped payload data for <see cref="HomingState"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<HomingStatePayload> GetTimestampedPayload(HarpMessage message)
+        {
+            var payload = message.GetTimestampedPayloadByte();
+            return Timestamped.Create(ParsePayload(payload.Value), payload.Seconds);
+        }
+
+        /// <summary>
+        /// Returns a Harp message for the <see cref="HomingState"/> register.
+        /// </summary>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="HomingState"/> register
+        /// with the specified message type and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(MessageType messageType, HomingStatePayload value)
+        {
+            return HarpMessage.FromByte(Address, messageType, FormatPayload(value));
+        }
+
+        /// <summary>
+        /// Returns a timestamped Harp message for the <see cref="HomingState"/>
+        /// register.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="HomingState"/> register
+        /// with the specified message type, timestamp, and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(double timestamp, MessageType messageType, HomingStatePayload value)
+        {
+            return HarpMessage.FromByte(Address, timestamp, messageType, FormatPayload(value));
+        }
+    }
+
+    /// <summary>
+    /// Provides methods for manipulating timestamped messages from the
+    /// HomingState register.
+    /// </summary>
+    /// <seealso cref="HomingState"/>
+    [Description("Filters and selects timestamped messages from the HomingState register.")]
+    public partial class TimestampedHomingState
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="HomingState"/> register. This field is constant.
+        /// </summary>
+        public const int Address = HomingState.Address;
+
+        /// <summary>
+        /// Returns timestamped payload data for <see cref="HomingState"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<HomingStatePayload> GetPayload(HarpMessage message)
+        {
+            return HomingState.GetTimestampedPayload(message);
+        }
+    }
+
+    /// <summary>
+    /// Represents a register that endstop configuration of each motor. Bits 0-1 select the digital input (0-3) wired to the endstop; bit 4 (0x10) set means the endstop is at the positive end of travel (default: negative end); bit 5 (0x20) set means the sensor pulls the line low when triggered (default: the line goes high when triggered). Homing enables the input's interrupt, and with it its DigitalInputState events. Default: motor n uses input n, negative end, active high.
+    /// </summary>
+    [Description("Endstop configuration of each motor. Bits 0-1 select the digital input (0-3) wired to the endstop; bit 4 (0x10) set means the endstop is at the positive end of travel (default: negative end); bit 5 (0x20) set means the sensor pulls the line low when triggered (default: the line goes high when triggered). Homing enables the input's interrupt, and with it its DigitalInputState events. Default: motor n uses input n, negative end, active high.")]
+    public partial class HomingConfig
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="HomingConfig"/> register. This field is constant.
+        /// </summary>
+        public const int Address = 147;
+
+        /// <summary>
+        /// Represents the payload type of the <see cref="HomingConfig"/> register. This field is constant.
+        /// </summary>
+        public const PayloadType RegisterType = PayloadType.U8;
+
+        /// <summary>
+        /// Represents the length of the <see cref="HomingConfig"/> register. This field is constant.
+        /// </summary>
+        public const int RegisterLength = 4;
+
+        static HomingConfigPayload ParsePayload(byte[] payload)
+        {
+            HomingConfigPayload result;
+            result.Motor0 = payload[0];
+            result.Motor1 = payload[1];
+            result.Motor2 = payload[2];
+            result.Motor3 = payload[3];
+            return result;
+        }
+
+        static byte[] FormatPayload(HomingConfigPayload value)
+        {
+            byte[] result;
+            result = new byte[4];
+            result[0] = value.Motor0;
+            result[1] = value.Motor1;
+            result[2] = value.Motor2;
+            result[3] = value.Motor3;
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the payload data for <see cref="HomingConfig"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the message payload.</returns>
+        public static HomingConfigPayload GetPayload(HarpMessage message)
+        {
+            return ParsePayload(message.GetPayloadArray<byte>());
+        }
+
+        /// <summary>
+        /// Returns the timestamped payload data for <see cref="HomingConfig"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<HomingConfigPayload> GetTimestampedPayload(HarpMessage message)
+        {
+            var payload = message.GetTimestampedPayloadArray<byte>();
+            return Timestamped.Create(ParsePayload(payload.Value), payload.Seconds);
+        }
+
+        /// <summary>
+        /// Returns a Harp message for the <see cref="HomingConfig"/> register.
+        /// </summary>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="HomingConfig"/> register
+        /// with the specified message type and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(MessageType messageType, HomingConfigPayload value)
+        {
+            return HarpMessage.FromByte(Address, messageType, FormatPayload(value));
+        }
+
+        /// <summary>
+        /// Returns a timestamped Harp message for the <see cref="HomingConfig"/>
+        /// register.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="HomingConfig"/> register
+        /// with the specified message type, timestamp, and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(double timestamp, MessageType messageType, HomingConfigPayload value)
+        {
+            return HarpMessage.FromByte(Address, timestamp, messageType, FormatPayload(value));
+        }
+    }
+
+    /// <summary>
+    /// Provides methods for manipulating timestamped messages from the
+    /// HomingConfig register.
+    /// </summary>
+    /// <seealso cref="HomingConfig"/>
+    [Description("Filters and selects timestamped messages from the HomingConfig register.")]
+    public partial class TimestampedHomingConfig
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="HomingConfig"/> register. This field is constant.
+        /// </summary>
+        public const int Address = HomingConfig.Address;
+
+        /// <summary>
+        /// Returns timestamped payload data for <see cref="HomingConfig"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<HomingConfigPayload> GetPayload(HarpMessage message)
+        {
+            return HomingConfig.GetTimestampedPayload(message);
+        }
+    }
+
+    /// <summary>
+    /// Represents a register that time between pulses, in microseconds, while searching for the endstop and backing off from it (default 100).
+    /// </summary>
+    [Description("Time between pulses, in microseconds, while searching for the endstop and backing off from it (default 100).")]
+    public partial class HomingStepInterval
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="HomingStepInterval"/> register. This field is constant.
+        /// </summary>
+        public const int Address = 148;
+
+        /// <summary>
+        /// Represents the payload type of the <see cref="HomingStepInterval"/> register. This field is constant.
+        /// </summary>
+        public const PayloadType RegisterType = PayloadType.U16;
+
+        /// <summary>
+        /// Represents the length of the <see cref="HomingStepInterval"/> register. This field is constant.
+        /// </summary>
+        public const int RegisterLength = 4;
+
+        static HomingStepIntervalPayload ParsePayload(ushort[] payload)
+        {
+            HomingStepIntervalPayload result;
+            result.Motor0 = payload[0];
+            result.Motor1 = payload[1];
+            result.Motor2 = payload[2];
+            result.Motor3 = payload[3];
+            return result;
+        }
+
+        static ushort[] FormatPayload(HomingStepIntervalPayload value)
+        {
+            ushort[] result;
+            result = new ushort[4];
+            result[0] = value.Motor0;
+            result[1] = value.Motor1;
+            result[2] = value.Motor2;
+            result[3] = value.Motor3;
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the payload data for <see cref="HomingStepInterval"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the message payload.</returns>
+        public static HomingStepIntervalPayload GetPayload(HarpMessage message)
+        {
+            return ParsePayload(message.GetPayloadArray<ushort>());
+        }
+
+        /// <summary>
+        /// Returns the timestamped payload data for <see cref="HomingStepInterval"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<HomingStepIntervalPayload> GetTimestampedPayload(HarpMessage message)
+        {
+            var payload = message.GetTimestampedPayloadArray<ushort>();
+            return Timestamped.Create(ParsePayload(payload.Value), payload.Seconds);
+        }
+
+        /// <summary>
+        /// Returns a Harp message for the <see cref="HomingStepInterval"/> register.
+        /// </summary>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="HomingStepInterval"/> register
+        /// with the specified message type and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(MessageType messageType, HomingStepIntervalPayload value)
+        {
+            return HarpMessage.FromUInt16(Address, messageType, FormatPayload(value));
+        }
+
+        /// <summary>
+        /// Returns a timestamped Harp message for the <see cref="HomingStepInterval"/>
+        /// register.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="HomingStepInterval"/> register
+        /// with the specified message type, timestamp, and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(double timestamp, MessageType messageType, HomingStepIntervalPayload value)
+        {
+            return HarpMessage.FromUInt16(Address, timestamp, messageType, FormatPayload(value));
+        }
+    }
+
+    /// <summary>
+    /// Provides methods for manipulating timestamped messages from the
+    /// HomingStepInterval register.
+    /// </summary>
+    /// <seealso cref="HomingStepInterval"/>
+    [Description("Filters and selects timestamped messages from the HomingStepInterval register.")]
+    public partial class TimestampedHomingStepInterval
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="HomingStepInterval"/> register. This field is constant.
+        /// </summary>
+        public const int Address = HomingStepInterval.Address;
+
+        /// <summary>
+        /// Returns timestamped payload data for <see cref="HomingStepInterval"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<HomingStepIntervalPayload> GetPayload(HarpMessage message)
+        {
+            return HomingStepInterval.GetTimestampedPayload(message);
+        }
+    }
+
+    /// <summary>
+    /// Represents a register that time between pulses, in microseconds, for the final approach to the endstop (default 500). The motor always stops within one pulse of the sensor edge, but at speed the carriage leads the step count by up to tens of pulses, so a slow final approach is what makes position 0 repeatable.
+    /// </summary>
+    [Description("Time between pulses, in microseconds, for the final approach to the endstop (default 500). The motor always stops within one pulse of the sensor edge, but at speed the carriage leads the step count by up to tens of pulses, so a slow final approach is what makes position 0 repeatable.")]
+    public partial class HomingSlowStepInterval
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="HomingSlowStepInterval"/> register. This field is constant.
+        /// </summary>
+        public const int Address = 149;
+
+        /// <summary>
+        /// Represents the payload type of the <see cref="HomingSlowStepInterval"/> register. This field is constant.
+        /// </summary>
+        public const PayloadType RegisterType = PayloadType.U16;
+
+        /// <summary>
+        /// Represents the length of the <see cref="HomingSlowStepInterval"/> register. This field is constant.
+        /// </summary>
+        public const int RegisterLength = 4;
+
+        static HomingSlowStepIntervalPayload ParsePayload(ushort[] payload)
+        {
+            HomingSlowStepIntervalPayload result;
+            result.Motor0 = payload[0];
+            result.Motor1 = payload[1];
+            result.Motor2 = payload[2];
+            result.Motor3 = payload[3];
+            return result;
+        }
+
+        static ushort[] FormatPayload(HomingSlowStepIntervalPayload value)
+        {
+            ushort[] result;
+            result = new ushort[4];
+            result[0] = value.Motor0;
+            result[1] = value.Motor1;
+            result[2] = value.Motor2;
+            result[3] = value.Motor3;
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the payload data for <see cref="HomingSlowStepInterval"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the message payload.</returns>
+        public static HomingSlowStepIntervalPayload GetPayload(HarpMessage message)
+        {
+            return ParsePayload(message.GetPayloadArray<ushort>());
+        }
+
+        /// <summary>
+        /// Returns the timestamped payload data for <see cref="HomingSlowStepInterval"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<HomingSlowStepIntervalPayload> GetTimestampedPayload(HarpMessage message)
+        {
+            var payload = message.GetTimestampedPayloadArray<ushort>();
+            return Timestamped.Create(ParsePayload(payload.Value), payload.Seconds);
+        }
+
+        /// <summary>
+        /// Returns a Harp message for the <see cref="HomingSlowStepInterval"/> register.
+        /// </summary>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="HomingSlowStepInterval"/> register
+        /// with the specified message type and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(MessageType messageType, HomingSlowStepIntervalPayload value)
+        {
+            return HarpMessage.FromUInt16(Address, messageType, FormatPayload(value));
+        }
+
+        /// <summary>
+        /// Returns a timestamped Harp message for the <see cref="HomingSlowStepInterval"/>
+        /// register.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="HomingSlowStepInterval"/> register
+        /// with the specified message type, timestamp, and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(double timestamp, MessageType messageType, HomingSlowStepIntervalPayload value)
+        {
+            return HarpMessage.FromUInt16(Address, timestamp, messageType, FormatPayload(value));
+        }
+    }
+
+    /// <summary>
+    /// Provides methods for manipulating timestamped messages from the
+    /// HomingSlowStepInterval register.
+    /// </summary>
+    /// <seealso cref="HomingSlowStepInterval"/>
+    [Description("Filters and selects timestamped messages from the HomingSlowStepInterval register.")]
+    public partial class TimestampedHomingSlowStepInterval
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="HomingSlowStepInterval"/> register. This field is constant.
+        /// </summary>
+        public const int Address = HomingSlowStepInterval.Address;
+
+        /// <summary>
+        /// Returns timestamped payload data for <see cref="HomingSlowStepInterval"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<HomingSlowStepIntervalPayload> GetPayload(HarpMessage message)
+        {
+            return HomingSlowStepInterval.GetTimestampedPayload(message);
+        }
+    }
+
+    /// <summary>
+    /// Represents a register that maximum number of pulses travelled while searching for the endstop; set it a little above the travel of the stage (e.g. 25600 = 32 mm at 1.25 um for a 30 mm stage). Homing fails if the sensor is not found within it. This is the only protection against a disconnected or dead endstop: an unplugged input reads as "not triggered" for an active-high sensor, so the motor searches the full distance and pushes against the hard stop for whatever part of it lies beyond the travel. The default 0 refuses HomeMotors for that motor until it is set.
+    /// </summary>
+    [Description("Maximum number of pulses travelled while searching for the endstop; set it a little above the travel of the stage (e.g. 25600 = 32 mm at 1.25 um for a 30 mm stage). Homing fails if the sensor is not found within it. This is the only protection against a disconnected or dead endstop: an unplugged input reads as "not triggered" for an active-high sensor, so the motor searches the full distance and pushes against the hard stop for whatever part of it lies beyond the travel. The default 0 refuses HomeMotors for that motor until it is set.")]
+    public partial class HomingSearchDistance
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="HomingSearchDistance"/> register. This field is constant.
+        /// </summary>
+        public const int Address = 150;
+
+        /// <summary>
+        /// Represents the payload type of the <see cref="HomingSearchDistance"/> register. This field is constant.
+        /// </summary>
+        public const PayloadType RegisterType = PayloadType.U32;
+
+        /// <summary>
+        /// Represents the length of the <see cref="HomingSearchDistance"/> register. This field is constant.
+        /// </summary>
+        public const int RegisterLength = 4;
+
+        static HomingSearchDistancePayload ParsePayload(uint[] payload)
+        {
+            HomingSearchDistancePayload result;
+            result.Motor0 = payload[0];
+            result.Motor1 = payload[1];
+            result.Motor2 = payload[2];
+            result.Motor3 = payload[3];
+            return result;
+        }
+
+        static uint[] FormatPayload(HomingSearchDistancePayload value)
+        {
+            uint[] result;
+            result = new uint[4];
+            result[0] = value.Motor0;
+            result[1] = value.Motor1;
+            result[2] = value.Motor2;
+            result[3] = value.Motor3;
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the payload data for <see cref="HomingSearchDistance"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the message payload.</returns>
+        public static HomingSearchDistancePayload GetPayload(HarpMessage message)
+        {
+            return ParsePayload(message.GetPayloadArray<uint>());
+        }
+
+        /// <summary>
+        /// Returns the timestamped payload data for <see cref="HomingSearchDistance"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<HomingSearchDistancePayload> GetTimestampedPayload(HarpMessage message)
+        {
+            var payload = message.GetTimestampedPayloadArray<uint>();
+            return Timestamped.Create(ParsePayload(payload.Value), payload.Seconds);
+        }
+
+        /// <summary>
+        /// Returns a Harp message for the <see cref="HomingSearchDistance"/> register.
+        /// </summary>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="HomingSearchDistance"/> register
+        /// with the specified message type and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(MessageType messageType, HomingSearchDistancePayload value)
+        {
+            return HarpMessage.FromUInt32(Address, messageType, FormatPayload(value));
+        }
+
+        /// <summary>
+        /// Returns a timestamped Harp message for the <see cref="HomingSearchDistance"/>
+        /// register.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="HomingSearchDistance"/> register
+        /// with the specified message type, timestamp, and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(double timestamp, MessageType messageType, HomingSearchDistancePayload value)
+        {
+            return HarpMessage.FromUInt32(Address, timestamp, messageType, FormatPayload(value));
+        }
+    }
+
+    /// <summary>
+    /// Provides methods for manipulating timestamped messages from the
+    /// HomingSearchDistance register.
+    /// </summary>
+    /// <seealso cref="HomingSearchDistance"/>
+    [Description("Filters and selects timestamped messages from the HomingSearchDistance register.")]
+    public partial class TimestampedHomingSearchDistance
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="HomingSearchDistance"/> register. This field is constant.
+        /// </summary>
+        public const int Address = HomingSearchDistance.Address;
+
+        /// <summary>
+        /// Returns timestamped payload data for <see cref="HomingSearchDistance"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<HomingSearchDistancePayload> GetPayload(HarpMessage message)
+        {
+            return HomingSearchDistance.GetTimestampedPayload(message);
+        }
+    }
+
+    /// <summary>
+    /// Represents a register that pulses to move away from the endstop between the search and the final approach (default 800). Must be larger than the sensor's hysteresis, or homing fails.
+    /// </summary>
+    [Description("Pulses to move away from the endstop between the search and the final approach (default 800). Must be larger than the sensor's hysteresis, or homing fails.")]
+    public partial class HomingBackoff
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="HomingBackoff"/> register. This field is constant.
+        /// </summary>
+        public const int Address = 151;
+
+        /// <summary>
+        /// Represents the payload type of the <see cref="HomingBackoff"/> register. This field is constant.
+        /// </summary>
+        public const PayloadType RegisterType = PayloadType.U16;
+
+        /// <summary>
+        /// Represents the length of the <see cref="HomingBackoff"/> register. This field is constant.
+        /// </summary>
+        public const int RegisterLength = 4;
+
+        static HomingBackoffPayload ParsePayload(ushort[] payload)
+        {
+            HomingBackoffPayload result;
+            result.Motor0 = payload[0];
+            result.Motor1 = payload[1];
+            result.Motor2 = payload[2];
+            result.Motor3 = payload[3];
+            return result;
+        }
+
+        static ushort[] FormatPayload(HomingBackoffPayload value)
+        {
+            ushort[] result;
+            result = new ushort[4];
+            result[0] = value.Motor0;
+            result[1] = value.Motor1;
+            result[2] = value.Motor2;
+            result[3] = value.Motor3;
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the payload data for <see cref="HomingBackoff"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the message payload.</returns>
+        public static HomingBackoffPayload GetPayload(HarpMessage message)
+        {
+            return ParsePayload(message.GetPayloadArray<ushort>());
+        }
+
+        /// <summary>
+        /// Returns the timestamped payload data for <see cref="HomingBackoff"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<HomingBackoffPayload> GetTimestampedPayload(HarpMessage message)
+        {
+            var payload = message.GetTimestampedPayloadArray<ushort>();
+            return Timestamped.Create(ParsePayload(payload.Value), payload.Seconds);
+        }
+
+        /// <summary>
+        /// Returns a Harp message for the <see cref="HomingBackoff"/> register.
+        /// </summary>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="HomingBackoff"/> register
+        /// with the specified message type and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(MessageType messageType, HomingBackoffPayload value)
+        {
+            return HarpMessage.FromUInt16(Address, messageType, FormatPayload(value));
+        }
+
+        /// <summary>
+        /// Returns a timestamped Harp message for the <see cref="HomingBackoff"/>
+        /// register.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">The type of the Harp message.</param>
+        /// <param name="value">The value to be stored in the message payload.</param>
+        /// <returns>
+        /// A <see cref="HarpMessage"/> object for the <see cref="HomingBackoff"/> register
+        /// with the specified message type, timestamp, and payload.
+        /// </returns>
+        public static HarpMessage FromPayload(double timestamp, MessageType messageType, HomingBackoffPayload value)
+        {
+            return HarpMessage.FromUInt16(Address, timestamp, messageType, FormatPayload(value));
+        }
+    }
+
+    /// <summary>
+    /// Provides methods for manipulating timestamped messages from the
+    /// HomingBackoff register.
+    /// </summary>
+    /// <seealso cref="HomingBackoff"/>
+    [Description("Filters and selects timestamped messages from the HomingBackoff register.")]
+    public partial class TimestampedHomingBackoff
+    {
+        /// <summary>
+        /// Represents the address of the <see cref="HomingBackoff"/> register. This field is constant.
+        /// </summary>
+        public const int Address = HomingBackoff.Address;
+
+        /// <summary>
+        /// Returns timestamped payload data for <see cref="HomingBackoff"/> register messages.
+        /// </summary>
+        /// <param name="message">A <see cref="HarpMessage"/> object representing the register message.</param>
+        /// <returns>A value representing the timestamped message payload.</returns>
+        public static Timestamped<HomingBackoffPayload> GetPayload(HarpMessage message)
+        {
+            return HomingBackoff.GetTimestampedPayload(message);
+        }
+    }
+
+    /// <summary>
     /// Represents an operator which creates standard message payloads for the
     /// StepperDriver device.
     /// </summary>
@@ -10898,6 +11754,13 @@ namespace Harp.StepperDriver
     /// <seealso cref="CreateMotor1AccelerationPayload"/>
     /// <seealso cref="CreateMotor2AccelerationPayload"/>
     /// <seealso cref="CreateMotor3AccelerationPayload"/>
+    /// <seealso cref="CreateHomeMotorsPayload"/>
+    /// <seealso cref="CreateHomingStatePayload"/>
+    /// <seealso cref="CreateHomingConfigPayload"/>
+    /// <seealso cref="CreateHomingStepIntervalPayload"/>
+    /// <seealso cref="CreateHomingSlowStepIntervalPayload"/>
+    /// <seealso cref="CreateHomingSearchDistancePayload"/>
+    /// <seealso cref="CreateHomingBackoffPayload"/>
     [XmlInclude(typeof(CreateEnableDriverPayload))]
     [XmlInclude(typeof(CreateDisableDriverPayload))]
     [XmlInclude(typeof(CreateEnableEncodersPayload))]
@@ -10993,6 +11856,13 @@ namespace Harp.StepperDriver
     [XmlInclude(typeof(CreateMotor1AccelerationPayload))]
     [XmlInclude(typeof(CreateMotor2AccelerationPayload))]
     [XmlInclude(typeof(CreateMotor3AccelerationPayload))]
+    [XmlInclude(typeof(CreateHomeMotorsPayload))]
+    [XmlInclude(typeof(CreateHomingStatePayload))]
+    [XmlInclude(typeof(CreateHomingConfigPayload))]
+    [XmlInclude(typeof(CreateHomingStepIntervalPayload))]
+    [XmlInclude(typeof(CreateHomingSlowStepIntervalPayload))]
+    [XmlInclude(typeof(CreateHomingSearchDistancePayload))]
+    [XmlInclude(typeof(CreateHomingBackoffPayload))]
     [XmlInclude(typeof(CreateTimestampedEnableDriverPayload))]
     [XmlInclude(typeof(CreateTimestampedDisableDriverPayload))]
     [XmlInclude(typeof(CreateTimestampedEnableEncodersPayload))]
@@ -11088,6 +11958,13 @@ namespace Harp.StepperDriver
     [XmlInclude(typeof(CreateTimestampedMotor1AccelerationPayload))]
     [XmlInclude(typeof(CreateTimestampedMotor2AccelerationPayload))]
     [XmlInclude(typeof(CreateTimestampedMotor3AccelerationPayload))]
+    [XmlInclude(typeof(CreateTimestampedHomeMotorsPayload))]
+    [XmlInclude(typeof(CreateTimestampedHomingStatePayload))]
+    [XmlInclude(typeof(CreateTimestampedHomingConfigPayload))]
+    [XmlInclude(typeof(CreateTimestampedHomingStepIntervalPayload))]
+    [XmlInclude(typeof(CreateTimestampedHomingSlowStepIntervalPayload))]
+    [XmlInclude(typeof(CreateTimestampedHomingSearchDistancePayload))]
+    [XmlInclude(typeof(CreateTimestampedHomingBackoffPayload))]
     [Description("Creates standard message payloads for the StepperDriver device.")]
     public partial class CreateMessage : CreateMessageBuilder, INamedElement
     {
@@ -16436,6 +17313,508 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
+    /// Represents an operator that creates a message payload
+    /// that starts homing the motors in the bit mask against the endstop configured in HomingConfig. Each motor runs its own sequence: if the sensor is already triggered it first moves away until it releases (at most 4 x HomingBackoff pulses), then searches toward it at HomingStepInterval (at most HomingSearchDistance pulses), backs off by HomingBackoff pulses, and approaches again at HomingSlowStepInterval (at most 2 x HomingBackoff pulses). The sensor is caught in an interrupt and the motor stops at the next pulse; that point becomes position 0. A motor that is moving is stopped first. Motors already homing are not restarted, so a later write can add motors while others are still homing. The write is refused if a selected driver is disabled, its HomingSearchDistance is 0, or the motors would exceed the CPU budget (see Motor0Acceleration). While homing, the motor's travel limits are ignored (the limit registers are not changed), moves written to it are refused, InputNOpMode stops do not apply to it, and it emits no MotorStopped events; the outcome is reported by HomingState. StopMotors cancels homing, and DisableDigitalInputs is refused for an endstop input in use. Acceleration and start speed come from MotorNAcceleration and MotorNMaximumStepInterval.
+    /// </summary>
+    [DisplayName("HomeMotorsPayload")]
+    [Description("Creates a message payload that starts homing the motors in the bit mask against the endstop configured in HomingConfig. Each motor runs its own sequence: if the sensor is already triggered it first moves away until it releases (at most 4 x HomingBackoff pulses), then searches toward it at HomingStepInterval (at most HomingSearchDistance pulses), backs off by HomingBackoff pulses, and approaches again at HomingSlowStepInterval (at most 2 x HomingBackoff pulses). The sensor is caught in an interrupt and the motor stops at the next pulse; that point becomes position 0. A motor that is moving is stopped first. Motors already homing are not restarted, so a later write can add motors while others are still homing. The write is refused if a selected driver is disabled, its HomingSearchDistance is 0, or the motors would exceed the CPU budget (see Motor0Acceleration). While homing, the motor's travel limits are ignored (the limit registers are not changed), moves written to it are refused, InputNOpMode stops do not apply to it, and it emits no MotorStopped events; the outcome is reported by HomingState. StopMotors cancels homing, and DisableDigitalInputs is refused for an endstop input in use. Acceleration and start speed come from MotorNAcceleration and MotorNMaximumStepInterval.")]
+    public partial class CreateHomeMotorsPayload
+    {
+        /// <summary>
+        /// Gets or sets the value that starts homing the motors in the bit mask against the endstop configured in HomingConfig. Each motor runs its own sequence: if the sensor is already triggered it first moves away until it releases (at most 4 x HomingBackoff pulses), then searches toward it at HomingStepInterval (at most HomingSearchDistance pulses), backs off by HomingBackoff pulses, and approaches again at HomingSlowStepInterval (at most 2 x HomingBackoff pulses). The sensor is caught in an interrupt and the motor stops at the next pulse; that point becomes position 0. A motor that is moving is stopped first. Motors already homing are not restarted, so a later write can add motors while others are still homing. The write is refused if a selected driver is disabled, its HomingSearchDistance is 0, or the motors would exceed the CPU budget (see Motor0Acceleration). While homing, the motor's travel limits are ignored (the limit registers are not changed), moves written to it are refused, InputNOpMode stops do not apply to it, and it emits no MotorStopped events; the outcome is reported by HomingState. StopMotors cancels homing, and DisableDigitalInputs is refused for an endstop input in use. Acceleration and start speed come from MotorNAcceleration and MotorNMaximumStepInterval.
+        /// </summary>
+        [Description("The value that starts homing the motors in the bit mask against the endstop configured in HomingConfig. Each motor runs its own sequence: if the sensor is already triggered it first moves away until it releases (at most 4 x HomingBackoff pulses), then searches toward it at HomingStepInterval (at most HomingSearchDistance pulses), backs off by HomingBackoff pulses, and approaches again at HomingSlowStepInterval (at most 2 x HomingBackoff pulses). The sensor is caught in an interrupt and the motor stops at the next pulse; that point becomes position 0. A motor that is moving is stopped first. Motors already homing are not restarted, so a later write can add motors while others are still homing. The write is refused if a selected driver is disabled, its HomingSearchDistance is 0, or the motors would exceed the CPU budget (see Motor0Acceleration). While homing, the motor's travel limits are ignored (the limit registers are not changed), moves written to it are refused, InputNOpMode stops do not apply to it, and it emits no MotorStopped events; the outcome is reported by HomingState. StopMotors cancels homing, and DisableDigitalInputs is refused for an endstop input in use. Acceleration and start speed come from MotorNAcceleration and MotorNMaximumStepInterval.")]
+        public StepperMotors HomeMotors { get; set; }
+
+        /// <summary>
+        /// Creates a message payload for the HomeMotors register.
+        /// </summary>
+        /// <returns>The created message payload value.</returns>
+        public StepperMotors GetPayload()
+        {
+            return HomeMotors;
+        }
+
+        /// <summary>
+        /// Creates a message that starts homing the motors in the bit mask against the endstop configured in HomingConfig. Each motor runs its own sequence: if the sensor is already triggered it first moves away until it releases (at most 4 x HomingBackoff pulses), then searches toward it at HomingStepInterval (at most HomingSearchDistance pulses), backs off by HomingBackoff pulses, and approaches again at HomingSlowStepInterval (at most 2 x HomingBackoff pulses). The sensor is caught in an interrupt and the motor stops at the next pulse; that point becomes position 0. A motor that is moving is stopped first. Motors already homing are not restarted, so a later write can add motors while others are still homing. The write is refused if a selected driver is disabled, its HomingSearchDistance is 0, or the motors would exceed the CPU budget (see Motor0Acceleration). While homing, the motor's travel limits are ignored (the limit registers are not changed), moves written to it are refused, InputNOpMode stops do not apply to it, and it emits no MotorStopped events; the outcome is reported by HomingState. StopMotors cancels homing, and DisableDigitalInputs is refused for an endstop input in use. Acceleration and start speed come from MotorNAcceleration and MotorNMaximumStepInterval.
+        /// </summary>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new message for the HomeMotors register.</returns>
+        public HarpMessage GetMessage(MessageType messageType)
+        {
+            return Harp.StepperDriver.HomeMotors.FromPayload(messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a timestamped message payload
+    /// that starts homing the motors in the bit mask against the endstop configured in HomingConfig. Each motor runs its own sequence: if the sensor is already triggered it first moves away until it releases (at most 4 x HomingBackoff pulses), then searches toward it at HomingStepInterval (at most HomingSearchDistance pulses), backs off by HomingBackoff pulses, and approaches again at HomingSlowStepInterval (at most 2 x HomingBackoff pulses). The sensor is caught in an interrupt and the motor stops at the next pulse; that point becomes position 0. A motor that is moving is stopped first. Motors already homing are not restarted, so a later write can add motors while others are still homing. The write is refused if a selected driver is disabled, its HomingSearchDistance is 0, or the motors would exceed the CPU budget (see Motor0Acceleration). While homing, the motor's travel limits are ignored (the limit registers are not changed), moves written to it are refused, InputNOpMode stops do not apply to it, and it emits no MotorStopped events; the outcome is reported by HomingState. StopMotors cancels homing, and DisableDigitalInputs is refused for an endstop input in use. Acceleration and start speed come from MotorNAcceleration and MotorNMaximumStepInterval.
+    /// </summary>
+    [DisplayName("TimestampedHomeMotorsPayload")]
+    [Description("Creates a timestamped message payload that starts homing the motors in the bit mask against the endstop configured in HomingConfig. Each motor runs its own sequence: if the sensor is already triggered it first moves away until it releases (at most 4 x HomingBackoff pulses), then searches toward it at HomingStepInterval (at most HomingSearchDistance pulses), backs off by HomingBackoff pulses, and approaches again at HomingSlowStepInterval (at most 2 x HomingBackoff pulses). The sensor is caught in an interrupt and the motor stops at the next pulse; that point becomes position 0. A motor that is moving is stopped first. Motors already homing are not restarted, so a later write can add motors while others are still homing. The write is refused if a selected driver is disabled, its HomingSearchDistance is 0, or the motors would exceed the CPU budget (see Motor0Acceleration). While homing, the motor's travel limits are ignored (the limit registers are not changed), moves written to it are refused, InputNOpMode stops do not apply to it, and it emits no MotorStopped events; the outcome is reported by HomingState. StopMotors cancels homing, and DisableDigitalInputs is refused for an endstop input in use. Acceleration and start speed come from MotorNAcceleration and MotorNMaximumStepInterval.")]
+    public partial class CreateTimestampedHomeMotorsPayload : CreateHomeMotorsPayload
+    {
+        /// <summary>
+        /// Creates a timestamped message that starts homing the motors in the bit mask against the endstop configured in HomingConfig. Each motor runs its own sequence: if the sensor is already triggered it first moves away until it releases (at most 4 x HomingBackoff pulses), then searches toward it at HomingStepInterval (at most HomingSearchDistance pulses), backs off by HomingBackoff pulses, and approaches again at HomingSlowStepInterval (at most 2 x HomingBackoff pulses). The sensor is caught in an interrupt and the motor stops at the next pulse; that point becomes position 0. A motor that is moving is stopped first. Motors already homing are not restarted, so a later write can add motors while others are still homing. The write is refused if a selected driver is disabled, its HomingSearchDistance is 0, or the motors would exceed the CPU budget (see Motor0Acceleration). While homing, the motor's travel limits are ignored (the limit registers are not changed), moves written to it are refused, InputNOpMode stops do not apply to it, and it emits no MotorStopped events; the outcome is reported by HomingState. StopMotors cancels homing, and DisableDigitalInputs is refused for an endstop input in use. Acceleration and start speed come from MotorNAcceleration and MotorNMaximumStepInterval.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new timestamped message for the HomeMotors register.</returns>
+        public HarpMessage GetMessage(double timestamp, MessageType messageType)
+        {
+            return Harp.StepperDriver.HomeMotors.FromPayload(timestamp, messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a message payload
+    /// that homing state of all motors, emitted whenever it changes. A motor is homed after a successful homing; it is no longer homed when homing starts again, fails or is cancelled, when its driver is disabled, or on a driver error or emergency stop.
+    /// </summary>
+    [DisplayName("HomingStatePayload")]
+    [Description("Creates a message payload that homing state of all motors, emitted whenever it changes. A motor is homed after a successful homing; it is no longer homed when homing starts again, fails or is cancelled, when its driver is disabled, or on a driver error or emergency stop.")]
+    public partial class CreateHomingStatePayload
+    {
+        /// <summary>
+        /// Gets or sets a value that specifies which motors are homed (position 0 is the endstop).
+        /// </summary>
+        [Description("Specifies which motors are homed (position 0 is the endstop).")]
+        public StepperMotors Homed { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that specifies which motors are homing now.
+        /// </summary>
+        [Description("Specifies which motors are homing now.")]
+        public StepperMotors Homing { get; set; }
+
+        /// <summary>
+        /// Creates a message payload for the HomingState register.
+        /// </summary>
+        /// <returns>The created message payload value.</returns>
+        public HomingStatePayload GetPayload()
+        {
+            HomingStatePayload value;
+            value.Homed = Homed;
+            value.Homing = Homing;
+            return value;
+        }
+
+        /// <summary>
+        /// Creates a message that homing state of all motors, emitted whenever it changes. A motor is homed after a successful homing; it is no longer homed when homing starts again, fails or is cancelled, when its driver is disabled, or on a driver error or emergency stop.
+        /// </summary>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new message for the HomingState register.</returns>
+        public HarpMessage GetMessage(MessageType messageType)
+        {
+            return Harp.StepperDriver.HomingState.FromPayload(messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a timestamped message payload
+    /// that homing state of all motors, emitted whenever it changes. A motor is homed after a successful homing; it is no longer homed when homing starts again, fails or is cancelled, when its driver is disabled, or on a driver error or emergency stop.
+    /// </summary>
+    [DisplayName("TimestampedHomingStatePayload")]
+    [Description("Creates a timestamped message payload that homing state of all motors, emitted whenever it changes. A motor is homed after a successful homing; it is no longer homed when homing starts again, fails or is cancelled, when its driver is disabled, or on a driver error or emergency stop.")]
+    public partial class CreateTimestampedHomingStatePayload : CreateHomingStatePayload
+    {
+        /// <summary>
+        /// Creates a timestamped message that homing state of all motors, emitted whenever it changes. A motor is homed after a successful homing; it is no longer homed when homing starts again, fails or is cancelled, when its driver is disabled, or on a driver error or emergency stop.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new timestamped message for the HomingState register.</returns>
+        public HarpMessage GetMessage(double timestamp, MessageType messageType)
+        {
+            return Harp.StepperDriver.HomingState.FromPayload(timestamp, messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a message payload
+    /// that endstop configuration of each motor. Bits 0-1 select the digital input (0-3) wired to the endstop; bit 4 (0x10) set means the endstop is at the positive end of travel (default: negative end); bit 5 (0x20) set means the sensor pulls the line low when triggered (default: the line goes high when triggered). Homing enables the input's interrupt, and with it its DigitalInputState events. Default: motor n uses input n, negative end, active high.
+    /// </summary>
+    [DisplayName("HomingConfigPayload")]
+    [Description("Creates a message payload that endstop configuration of each motor. Bits 0-1 select the digital input (0-3) wired to the endstop; bit 4 (0x10) set means the endstop is at the positive end of travel (default: negative end); bit 5 (0x20) set means the sensor pulls the line low when triggered (default: the line goes high when triggered). Homing enables the input's interrupt, and with it its DigitalInputState events. Default: motor n uses input n, negative end, active high.")]
+    public partial class CreateHomingConfigPayload
+    {
+        /// <summary>
+        /// Gets or sets a value that endstop configuration of motor 0.
+        /// </summary>
+        [Description("Endstop configuration of motor 0.")]
+        public byte Motor0 { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that endstop configuration of motor 1.
+        /// </summary>
+        [Description("Endstop configuration of motor 1.")]
+        public byte Motor1 { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that endstop configuration of motor 2.
+        /// </summary>
+        [Description("Endstop configuration of motor 2.")]
+        public byte Motor2 { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that endstop configuration of motor 3.
+        /// </summary>
+        [Description("Endstop configuration of motor 3.")]
+        public byte Motor3 { get; set; }
+
+        /// <summary>
+        /// Creates a message payload for the HomingConfig register.
+        /// </summary>
+        /// <returns>The created message payload value.</returns>
+        public HomingConfigPayload GetPayload()
+        {
+            HomingConfigPayload value;
+            value.Motor0 = Motor0;
+            value.Motor1 = Motor1;
+            value.Motor2 = Motor2;
+            value.Motor3 = Motor3;
+            return value;
+        }
+
+        /// <summary>
+        /// Creates a message that endstop configuration of each motor. Bits 0-1 select the digital input (0-3) wired to the endstop; bit 4 (0x10) set means the endstop is at the positive end of travel (default: negative end); bit 5 (0x20) set means the sensor pulls the line low when triggered (default: the line goes high when triggered). Homing enables the input's interrupt, and with it its DigitalInputState events. Default: motor n uses input n, negative end, active high.
+        /// </summary>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new message for the HomingConfig register.</returns>
+        public HarpMessage GetMessage(MessageType messageType)
+        {
+            return Harp.StepperDriver.HomingConfig.FromPayload(messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a timestamped message payload
+    /// that endstop configuration of each motor. Bits 0-1 select the digital input (0-3) wired to the endstop; bit 4 (0x10) set means the endstop is at the positive end of travel (default: negative end); bit 5 (0x20) set means the sensor pulls the line low when triggered (default: the line goes high when triggered). Homing enables the input's interrupt, and with it its DigitalInputState events. Default: motor n uses input n, negative end, active high.
+    /// </summary>
+    [DisplayName("TimestampedHomingConfigPayload")]
+    [Description("Creates a timestamped message payload that endstop configuration of each motor. Bits 0-1 select the digital input (0-3) wired to the endstop; bit 4 (0x10) set means the endstop is at the positive end of travel (default: negative end); bit 5 (0x20) set means the sensor pulls the line low when triggered (default: the line goes high when triggered). Homing enables the input's interrupt, and with it its DigitalInputState events. Default: motor n uses input n, negative end, active high.")]
+    public partial class CreateTimestampedHomingConfigPayload : CreateHomingConfigPayload
+    {
+        /// <summary>
+        /// Creates a timestamped message that endstop configuration of each motor. Bits 0-1 select the digital input (0-3) wired to the endstop; bit 4 (0x10) set means the endstop is at the positive end of travel (default: negative end); bit 5 (0x20) set means the sensor pulls the line low when triggered (default: the line goes high when triggered). Homing enables the input's interrupt, and with it its DigitalInputState events. Default: motor n uses input n, negative end, active high.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new timestamped message for the HomingConfig register.</returns>
+        public HarpMessage GetMessage(double timestamp, MessageType messageType)
+        {
+            return Harp.StepperDriver.HomingConfig.FromPayload(timestamp, messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a message payload
+    /// that time between pulses, in microseconds, while searching for the endstop and backing off from it (default 100).
+    /// </summary>
+    [DisplayName("HomingStepIntervalPayload")]
+    [Description("Creates a message payload that time between pulses, in microseconds, while searching for the endstop and backing off from it (default 100).")]
+    public partial class CreateHomingStepIntervalPayload
+    {
+        /// <summary>
+        /// Gets or sets a value that search step interval of motor 0, in microseconds.
+        /// </summary>
+        [Description("Search step interval of motor 0, in microseconds.")]
+        public ushort Motor0 { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that search step interval of motor 1, in microseconds.
+        /// </summary>
+        [Description("Search step interval of motor 1, in microseconds.")]
+        public ushort Motor1 { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that search step interval of motor 2, in microseconds.
+        /// </summary>
+        [Description("Search step interval of motor 2, in microseconds.")]
+        public ushort Motor2 { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that search step interval of motor 3, in microseconds.
+        /// </summary>
+        [Description("Search step interval of motor 3, in microseconds.")]
+        public ushort Motor3 { get; set; }
+
+        /// <summary>
+        /// Creates a message payload for the HomingStepInterval register.
+        /// </summary>
+        /// <returns>The created message payload value.</returns>
+        public HomingStepIntervalPayload GetPayload()
+        {
+            HomingStepIntervalPayload value;
+            value.Motor0 = Motor0;
+            value.Motor1 = Motor1;
+            value.Motor2 = Motor2;
+            value.Motor3 = Motor3;
+            return value;
+        }
+
+        /// <summary>
+        /// Creates a message that time between pulses, in microseconds, while searching for the endstop and backing off from it (default 100).
+        /// </summary>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new message for the HomingStepInterval register.</returns>
+        public HarpMessage GetMessage(MessageType messageType)
+        {
+            return Harp.StepperDriver.HomingStepInterval.FromPayload(messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a timestamped message payload
+    /// that time between pulses, in microseconds, while searching for the endstop and backing off from it (default 100).
+    /// </summary>
+    [DisplayName("TimestampedHomingStepIntervalPayload")]
+    [Description("Creates a timestamped message payload that time between pulses, in microseconds, while searching for the endstop and backing off from it (default 100).")]
+    public partial class CreateTimestampedHomingStepIntervalPayload : CreateHomingStepIntervalPayload
+    {
+        /// <summary>
+        /// Creates a timestamped message that time between pulses, in microseconds, while searching for the endstop and backing off from it (default 100).
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new timestamped message for the HomingStepInterval register.</returns>
+        public HarpMessage GetMessage(double timestamp, MessageType messageType)
+        {
+            return Harp.StepperDriver.HomingStepInterval.FromPayload(timestamp, messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a message payload
+    /// that time between pulses, in microseconds, for the final approach to the endstop (default 500). The motor always stops within one pulse of the sensor edge, but at speed the carriage leads the step count by up to tens of pulses, so a slow final approach is what makes position 0 repeatable.
+    /// </summary>
+    [DisplayName("HomingSlowStepIntervalPayload")]
+    [Description("Creates a message payload that time between pulses, in microseconds, for the final approach to the endstop (default 500). The motor always stops within one pulse of the sensor edge, but at speed the carriage leads the step count by up to tens of pulses, so a slow final approach is what makes position 0 repeatable.")]
+    public partial class CreateHomingSlowStepIntervalPayload
+    {
+        /// <summary>
+        /// Gets or sets a value that final approach step interval of motor 0, in microseconds.
+        /// </summary>
+        [Description("Final approach step interval of motor 0, in microseconds.")]
+        public ushort Motor0 { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that final approach step interval of motor 1, in microseconds.
+        /// </summary>
+        [Description("Final approach step interval of motor 1, in microseconds.")]
+        public ushort Motor1 { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that final approach step interval of motor 2, in microseconds.
+        /// </summary>
+        [Description("Final approach step interval of motor 2, in microseconds.")]
+        public ushort Motor2 { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that final approach step interval of motor 3, in microseconds.
+        /// </summary>
+        [Description("Final approach step interval of motor 3, in microseconds.")]
+        public ushort Motor3 { get; set; }
+
+        /// <summary>
+        /// Creates a message payload for the HomingSlowStepInterval register.
+        /// </summary>
+        /// <returns>The created message payload value.</returns>
+        public HomingSlowStepIntervalPayload GetPayload()
+        {
+            HomingSlowStepIntervalPayload value;
+            value.Motor0 = Motor0;
+            value.Motor1 = Motor1;
+            value.Motor2 = Motor2;
+            value.Motor3 = Motor3;
+            return value;
+        }
+
+        /// <summary>
+        /// Creates a message that time between pulses, in microseconds, for the final approach to the endstop (default 500). The motor always stops within one pulse of the sensor edge, but at speed the carriage leads the step count by up to tens of pulses, so a slow final approach is what makes position 0 repeatable.
+        /// </summary>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new message for the HomingSlowStepInterval register.</returns>
+        public HarpMessage GetMessage(MessageType messageType)
+        {
+            return Harp.StepperDriver.HomingSlowStepInterval.FromPayload(messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a timestamped message payload
+    /// that time between pulses, in microseconds, for the final approach to the endstop (default 500). The motor always stops within one pulse of the sensor edge, but at speed the carriage leads the step count by up to tens of pulses, so a slow final approach is what makes position 0 repeatable.
+    /// </summary>
+    [DisplayName("TimestampedHomingSlowStepIntervalPayload")]
+    [Description("Creates a timestamped message payload that time between pulses, in microseconds, for the final approach to the endstop (default 500). The motor always stops within one pulse of the sensor edge, but at speed the carriage leads the step count by up to tens of pulses, so a slow final approach is what makes position 0 repeatable.")]
+    public partial class CreateTimestampedHomingSlowStepIntervalPayload : CreateHomingSlowStepIntervalPayload
+    {
+        /// <summary>
+        /// Creates a timestamped message that time between pulses, in microseconds, for the final approach to the endstop (default 500). The motor always stops within one pulse of the sensor edge, but at speed the carriage leads the step count by up to tens of pulses, so a slow final approach is what makes position 0 repeatable.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new timestamped message for the HomingSlowStepInterval register.</returns>
+        public HarpMessage GetMessage(double timestamp, MessageType messageType)
+        {
+            return Harp.StepperDriver.HomingSlowStepInterval.FromPayload(timestamp, messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a message payload
+    /// that maximum number of pulses travelled while searching for the endstop; set it a little above the travel of the stage (e.g. 25600 = 32 mm at 1.25 um for a 30 mm stage). Homing fails if the sensor is not found within it. This is the only protection against a disconnected or dead endstop: an unplugged input reads as "not triggered" for an active-high sensor, so the motor searches the full distance and pushes against the hard stop for whatever part of it lies beyond the travel. The default 0 refuses HomeMotors for that motor until it is set.
+    /// </summary>
+    [DisplayName("HomingSearchDistancePayload")]
+    [Description("Creates a message payload that maximum number of pulses travelled while searching for the endstop; set it a little above the travel of the stage (e.g. 25600 = 32 mm at 1.25 um for a 30 mm stage). Homing fails if the sensor is not found within it. This is the only protection against a disconnected or dead endstop: an unplugged input reads as "not triggered" for an active-high sensor, so the motor searches the full distance and pushes against the hard stop for whatever part of it lies beyond the travel. The default 0 refuses HomeMotors for that motor until it is set.")]
+    public partial class CreateHomingSearchDistancePayload
+    {
+        /// <summary>
+        /// Gets or sets a value that search distance of motor 0, in pulses.
+        /// </summary>
+        [Description("Search distance of motor 0, in pulses.")]
+        public uint Motor0 { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that search distance of motor 1, in pulses.
+        /// </summary>
+        [Description("Search distance of motor 1, in pulses.")]
+        public uint Motor1 { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that search distance of motor 2, in pulses.
+        /// </summary>
+        [Description("Search distance of motor 2, in pulses.")]
+        public uint Motor2 { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that search distance of motor 3, in pulses.
+        /// </summary>
+        [Description("Search distance of motor 3, in pulses.")]
+        public uint Motor3 { get; set; }
+
+        /// <summary>
+        /// Creates a message payload for the HomingSearchDistance register.
+        /// </summary>
+        /// <returns>The created message payload value.</returns>
+        public HomingSearchDistancePayload GetPayload()
+        {
+            HomingSearchDistancePayload value;
+            value.Motor0 = Motor0;
+            value.Motor1 = Motor1;
+            value.Motor2 = Motor2;
+            value.Motor3 = Motor3;
+            return value;
+        }
+
+        /// <summary>
+        /// Creates a message that maximum number of pulses travelled while searching for the endstop; set it a little above the travel of the stage (e.g. 25600 = 32 mm at 1.25 um for a 30 mm stage). Homing fails if the sensor is not found within it. This is the only protection against a disconnected or dead endstop: an unplugged input reads as "not triggered" for an active-high sensor, so the motor searches the full distance and pushes against the hard stop for whatever part of it lies beyond the travel. The default 0 refuses HomeMotors for that motor until it is set.
+        /// </summary>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new message for the HomingSearchDistance register.</returns>
+        public HarpMessage GetMessage(MessageType messageType)
+        {
+            return Harp.StepperDriver.HomingSearchDistance.FromPayload(messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a timestamped message payload
+    /// that maximum number of pulses travelled while searching for the endstop; set it a little above the travel of the stage (e.g. 25600 = 32 mm at 1.25 um for a 30 mm stage). Homing fails if the sensor is not found within it. This is the only protection against a disconnected or dead endstop: an unplugged input reads as "not triggered" for an active-high sensor, so the motor searches the full distance and pushes against the hard stop for whatever part of it lies beyond the travel. The default 0 refuses HomeMotors for that motor until it is set.
+    /// </summary>
+    [DisplayName("TimestampedHomingSearchDistancePayload")]
+    [Description("Creates a timestamped message payload that maximum number of pulses travelled while searching for the endstop; set it a little above the travel of the stage (e.g. 25600 = 32 mm at 1.25 um for a 30 mm stage). Homing fails if the sensor is not found within it. This is the only protection against a disconnected or dead endstop: an unplugged input reads as "not triggered" for an active-high sensor, so the motor searches the full distance and pushes against the hard stop for whatever part of it lies beyond the travel. The default 0 refuses HomeMotors for that motor until it is set.")]
+    public partial class CreateTimestampedHomingSearchDistancePayload : CreateHomingSearchDistancePayload
+    {
+        /// <summary>
+        /// Creates a timestamped message that maximum number of pulses travelled while searching for the endstop; set it a little above the travel of the stage (e.g. 25600 = 32 mm at 1.25 um for a 30 mm stage). Homing fails if the sensor is not found within it. This is the only protection against a disconnected or dead endstop: an unplugged input reads as "not triggered" for an active-high sensor, so the motor searches the full distance and pushes against the hard stop for whatever part of it lies beyond the travel. The default 0 refuses HomeMotors for that motor until it is set.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new timestamped message for the HomingSearchDistance register.</returns>
+        public HarpMessage GetMessage(double timestamp, MessageType messageType)
+        {
+            return Harp.StepperDriver.HomingSearchDistance.FromPayload(timestamp, messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a message payload
+    /// that pulses to move away from the endstop between the search and the final approach (default 800). Must be larger than the sensor's hysteresis, or homing fails.
+    /// </summary>
+    [DisplayName("HomingBackoffPayload")]
+    [Description("Creates a message payload that pulses to move away from the endstop between the search and the final approach (default 800). Must be larger than the sensor's hysteresis, or homing fails.")]
+    public partial class CreateHomingBackoffPayload
+    {
+        /// <summary>
+        /// Gets or sets a value that backoff of motor 0, in pulses.
+        /// </summary>
+        [Description("Backoff of motor 0, in pulses.")]
+        public ushort Motor0 { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that backoff of motor 1, in pulses.
+        /// </summary>
+        [Description("Backoff of motor 1, in pulses.")]
+        public ushort Motor1 { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that backoff of motor 2, in pulses.
+        /// </summary>
+        [Description("Backoff of motor 2, in pulses.")]
+        public ushort Motor2 { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that backoff of motor 3, in pulses.
+        /// </summary>
+        [Description("Backoff of motor 3, in pulses.")]
+        public ushort Motor3 { get; set; }
+
+        /// <summary>
+        /// Creates a message payload for the HomingBackoff register.
+        /// </summary>
+        /// <returns>The created message payload value.</returns>
+        public HomingBackoffPayload GetPayload()
+        {
+            HomingBackoffPayload value;
+            value.Motor0 = Motor0;
+            value.Motor1 = Motor1;
+            value.Motor2 = Motor2;
+            value.Motor3 = Motor3;
+            return value;
+        }
+
+        /// <summary>
+        /// Creates a message that pulses to move away from the endstop between the search and the final approach (default 800). Must be larger than the sensor's hysteresis, or homing fails.
+        /// </summary>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new message for the HomingBackoff register.</returns>
+        public HarpMessage GetMessage(MessageType messageType)
+        {
+            return Harp.StepperDriver.HomingBackoff.FromPayload(messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
+    /// Represents an operator that creates a timestamped message payload
+    /// that pulses to move away from the endstop between the search and the final approach (default 800). Must be larger than the sensor's hysteresis, or homing fails.
+    /// </summary>
+    [DisplayName("TimestampedHomingBackoffPayload")]
+    [Description("Creates a timestamped message payload that pulses to move away from the endstop between the search and the final approach (default 800). Must be larger than the sensor's hysteresis, or homing fails.")]
+    public partial class CreateTimestampedHomingBackoffPayload : CreateHomingBackoffPayload
+    {
+        /// <summary>
+        /// Creates a timestamped message that pulses to move away from the endstop between the search and the final approach (default 800). Must be larger than the sensor's hysteresis, or homing fails.
+        /// </summary>
+        /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
+        /// <param name="messageType">Specifies the type of the created message.</param>
+        /// <returns>A new timestamped message for the HomingBackoff register.</returns>
+        public HarpMessage GetMessage(double timestamp, MessageType messageType)
+        {
+            return Harp.StepperDriver.HomingBackoff.FromPayload(timestamp, messageType, GetPayload());
+        }
+    }
+
+    /// <summary>
     /// Represents the payload of the MotorStopped register.
     /// </summary>
     public struct MotorStoppedPayload
@@ -16904,6 +18283,366 @@ namespace Harp.StepperDriver
         public override string ToString()
         {
             return "StepRelativePayload { " +
+                "Motor0 = " + Motor0 + ", " +
+                "Motor1 = " + Motor1 + ", " +
+                "Motor2 = " + Motor2 + ", " +
+                "Motor3 = " + Motor3 + " " +
+            "}";
+        }
+    }
+
+    /// <summary>
+    /// Represents the payload of the HomingState register.
+    /// </summary>
+    public struct HomingStatePayload
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HomingStatePayload"/> structure.
+        /// </summary>
+        /// <param name="homed">Specifies which motors are homed (position 0 is the endstop).</param>
+        /// <param name="homing">Specifies which motors are homing now.</param>
+        public HomingStatePayload(
+            StepperMotors homed,
+            StepperMotors homing)
+        {
+            Homed = homed;
+            Homing = homing;
+        }
+
+        /// <summary>
+        /// Specifies which motors are homed (position 0 is the endstop).
+        /// </summary>
+        public StepperMotors Homed;
+
+        /// <summary>
+        /// Specifies which motors are homing now.
+        /// </summary>
+        public StepperMotors Homing;
+
+        /// <summary>
+        /// Returns a <see cref="string"/> that represents the payload of
+        /// the HomingState register.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="string"/> that represents the payload of the
+        /// HomingState register.
+        /// </returns>
+        public override string ToString()
+        {
+            return "HomingStatePayload { " +
+                "Homed = " + Homed + ", " +
+                "Homing = " + Homing + " " +
+            "}";
+        }
+    }
+
+    /// <summary>
+    /// Represents the payload of the HomingConfig register.
+    /// </summary>
+    public struct HomingConfigPayload
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HomingConfigPayload"/> structure.
+        /// </summary>
+        /// <param name="motor0">Endstop configuration of motor 0.</param>
+        /// <param name="motor1">Endstop configuration of motor 1.</param>
+        /// <param name="motor2">Endstop configuration of motor 2.</param>
+        /// <param name="motor3">Endstop configuration of motor 3.</param>
+        public HomingConfigPayload(
+            byte motor0,
+            byte motor1,
+            byte motor2,
+            byte motor3)
+        {
+            Motor0 = motor0;
+            Motor1 = motor1;
+            Motor2 = motor2;
+            Motor3 = motor3;
+        }
+
+        /// <summary>
+        /// Endstop configuration of motor 0.
+        /// </summary>
+        public byte Motor0;
+
+        /// <summary>
+        /// Endstop configuration of motor 1.
+        /// </summary>
+        public byte Motor1;
+
+        /// <summary>
+        /// Endstop configuration of motor 2.
+        /// </summary>
+        public byte Motor2;
+
+        /// <summary>
+        /// Endstop configuration of motor 3.
+        /// </summary>
+        public byte Motor3;
+
+        /// <summary>
+        /// Returns a <see cref="string"/> that represents the payload of
+        /// the HomingConfig register.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="string"/> that represents the payload of the
+        /// HomingConfig register.
+        /// </returns>
+        public override string ToString()
+        {
+            return "HomingConfigPayload { " +
+                "Motor0 = " + Motor0 + ", " +
+                "Motor1 = " + Motor1 + ", " +
+                "Motor2 = " + Motor2 + ", " +
+                "Motor3 = " + Motor3 + " " +
+            "}";
+        }
+    }
+
+    /// <summary>
+    /// Represents the payload of the HomingStepInterval register.
+    /// </summary>
+    public struct HomingStepIntervalPayload
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HomingStepIntervalPayload"/> structure.
+        /// </summary>
+        /// <param name="motor0">Search step interval of motor 0, in microseconds.</param>
+        /// <param name="motor1">Search step interval of motor 1, in microseconds.</param>
+        /// <param name="motor2">Search step interval of motor 2, in microseconds.</param>
+        /// <param name="motor3">Search step interval of motor 3, in microseconds.</param>
+        public HomingStepIntervalPayload(
+            ushort motor0,
+            ushort motor1,
+            ushort motor2,
+            ushort motor3)
+        {
+            Motor0 = motor0;
+            Motor1 = motor1;
+            Motor2 = motor2;
+            Motor3 = motor3;
+        }
+
+        /// <summary>
+        /// Search step interval of motor 0, in microseconds.
+        /// </summary>
+        public ushort Motor0;
+
+        /// <summary>
+        /// Search step interval of motor 1, in microseconds.
+        /// </summary>
+        public ushort Motor1;
+
+        /// <summary>
+        /// Search step interval of motor 2, in microseconds.
+        /// </summary>
+        public ushort Motor2;
+
+        /// <summary>
+        /// Search step interval of motor 3, in microseconds.
+        /// </summary>
+        public ushort Motor3;
+
+        /// <summary>
+        /// Returns a <see cref="string"/> that represents the payload of
+        /// the HomingStepInterval register.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="string"/> that represents the payload of the
+        /// HomingStepInterval register.
+        /// </returns>
+        public override string ToString()
+        {
+            return "HomingStepIntervalPayload { " +
+                "Motor0 = " + Motor0 + ", " +
+                "Motor1 = " + Motor1 + ", " +
+                "Motor2 = " + Motor2 + ", " +
+                "Motor3 = " + Motor3 + " " +
+            "}";
+        }
+    }
+
+    /// <summary>
+    /// Represents the payload of the HomingSlowStepInterval register.
+    /// </summary>
+    public struct HomingSlowStepIntervalPayload
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HomingSlowStepIntervalPayload"/> structure.
+        /// </summary>
+        /// <param name="motor0">Final approach step interval of motor 0, in microseconds.</param>
+        /// <param name="motor1">Final approach step interval of motor 1, in microseconds.</param>
+        /// <param name="motor2">Final approach step interval of motor 2, in microseconds.</param>
+        /// <param name="motor3">Final approach step interval of motor 3, in microseconds.</param>
+        public HomingSlowStepIntervalPayload(
+            ushort motor0,
+            ushort motor1,
+            ushort motor2,
+            ushort motor3)
+        {
+            Motor0 = motor0;
+            Motor1 = motor1;
+            Motor2 = motor2;
+            Motor3 = motor3;
+        }
+
+        /// <summary>
+        /// Final approach step interval of motor 0, in microseconds.
+        /// </summary>
+        public ushort Motor0;
+
+        /// <summary>
+        /// Final approach step interval of motor 1, in microseconds.
+        /// </summary>
+        public ushort Motor1;
+
+        /// <summary>
+        /// Final approach step interval of motor 2, in microseconds.
+        /// </summary>
+        public ushort Motor2;
+
+        /// <summary>
+        /// Final approach step interval of motor 3, in microseconds.
+        /// </summary>
+        public ushort Motor3;
+
+        /// <summary>
+        /// Returns a <see cref="string"/> that represents the payload of
+        /// the HomingSlowStepInterval register.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="string"/> that represents the payload of the
+        /// HomingSlowStepInterval register.
+        /// </returns>
+        public override string ToString()
+        {
+            return "HomingSlowStepIntervalPayload { " +
+                "Motor0 = " + Motor0 + ", " +
+                "Motor1 = " + Motor1 + ", " +
+                "Motor2 = " + Motor2 + ", " +
+                "Motor3 = " + Motor3 + " " +
+            "}";
+        }
+    }
+
+    /// <summary>
+    /// Represents the payload of the HomingSearchDistance register.
+    /// </summary>
+    public struct HomingSearchDistancePayload
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HomingSearchDistancePayload"/> structure.
+        /// </summary>
+        /// <param name="motor0">Search distance of motor 0, in pulses.</param>
+        /// <param name="motor1">Search distance of motor 1, in pulses.</param>
+        /// <param name="motor2">Search distance of motor 2, in pulses.</param>
+        /// <param name="motor3">Search distance of motor 3, in pulses.</param>
+        public HomingSearchDistancePayload(
+            uint motor0,
+            uint motor1,
+            uint motor2,
+            uint motor3)
+        {
+            Motor0 = motor0;
+            Motor1 = motor1;
+            Motor2 = motor2;
+            Motor3 = motor3;
+        }
+
+        /// <summary>
+        /// Search distance of motor 0, in pulses.
+        /// </summary>
+        public uint Motor0;
+
+        /// <summary>
+        /// Search distance of motor 1, in pulses.
+        /// </summary>
+        public uint Motor1;
+
+        /// <summary>
+        /// Search distance of motor 2, in pulses.
+        /// </summary>
+        public uint Motor2;
+
+        /// <summary>
+        /// Search distance of motor 3, in pulses.
+        /// </summary>
+        public uint Motor3;
+
+        /// <summary>
+        /// Returns a <see cref="string"/> that represents the payload of
+        /// the HomingSearchDistance register.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="string"/> that represents the payload of the
+        /// HomingSearchDistance register.
+        /// </returns>
+        public override string ToString()
+        {
+            return "HomingSearchDistancePayload { " +
+                "Motor0 = " + Motor0 + ", " +
+                "Motor1 = " + Motor1 + ", " +
+                "Motor2 = " + Motor2 + ", " +
+                "Motor3 = " + Motor3 + " " +
+            "}";
+        }
+    }
+
+    /// <summary>
+    /// Represents the payload of the HomingBackoff register.
+    /// </summary>
+    public struct HomingBackoffPayload
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HomingBackoffPayload"/> structure.
+        /// </summary>
+        /// <param name="motor0">Backoff of motor 0, in pulses.</param>
+        /// <param name="motor1">Backoff of motor 1, in pulses.</param>
+        /// <param name="motor2">Backoff of motor 2, in pulses.</param>
+        /// <param name="motor3">Backoff of motor 3, in pulses.</param>
+        public HomingBackoffPayload(
+            ushort motor0,
+            ushort motor1,
+            ushort motor2,
+            ushort motor3)
+        {
+            Motor0 = motor0;
+            Motor1 = motor1;
+            Motor2 = motor2;
+            Motor3 = motor3;
+        }
+
+        /// <summary>
+        /// Backoff of motor 0, in pulses.
+        /// </summary>
+        public ushort Motor0;
+
+        /// <summary>
+        /// Backoff of motor 1, in pulses.
+        /// </summary>
+        public ushort Motor1;
+
+        /// <summary>
+        /// Backoff of motor 2, in pulses.
+        /// </summary>
+        public ushort Motor2;
+
+        /// <summary>
+        /// Backoff of motor 3, in pulses.
+        /// </summary>
+        public ushort Motor3;
+
+        /// <summary>
+        /// Returns a <see cref="string"/> that represents the payload of
+        /// the HomingBackoff register.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="string"/> that represents the payload of the
+        /// HomingBackoff register.
+        /// </returns>
+        public override string ToString()
+        {
+            return "HomingBackoffPayload { " +
                 "Motor0 = " + Motor0 + ", " +
                 "Motor1 = " + Motor1 + ", " +
                 "Motor2 = " + Motor2 + ", " +

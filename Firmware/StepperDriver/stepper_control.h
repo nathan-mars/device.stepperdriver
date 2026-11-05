@@ -22,6 +22,8 @@
 
 /* Initialise the engine; call once from core_callback_initialize_hardware(). */
 bool initialize_motors(void);
+/* True when the motor's driver is not enabled (moves are refused). */
+bool motor_driver_off(uint8_t i);
 
 /* Re-read a motor's speed registers into the engine (after a register write). */
 void refresh_motor_profile(uint8_t motor_index);

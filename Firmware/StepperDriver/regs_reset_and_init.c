@@ -55,6 +55,20 @@ void core_callback_reset_registers(void)
 	app_regs.REG_MOTOR1_ACCELERATION = 17778;
 	app_regs.REG_MOTOR2_ACCELERATION = 17778;
 	app_regs.REG_MOTOR3_ACCELERATION = 17778;
+
+	/* Homing: motor n on input n, endstop at the negative end, active high;
+	   100 us search, 500 us final approach, 800 pulses backoff. The search
+	   distance must be set by the user (0 refuses HomeMotors). */
+	for (uint8_t i = 0; i < 4; i++)
+	{
+		app_regs.REG_HOMING_CONFIG[i] = i;
+		app_regs.REG_HOMING_STEP_INTERVAL[i] = 100;
+		app_regs.REG_HOMING_SLOW_STEP_INTERVAL[i] = 500;
+		app_regs.REG_HOMING_SEARCH_DISTANCE[i] = 0;
+		app_regs.REG_HOMING_BACKOFF[i] = 800;
+	}
+	app_regs.REG_HOME_MOTORS = 0;
+	app_regs.REG_HOMING_STATE = 0;
 	
 	app_regs.REG_ENCODERS_UPDATE_RATE = GM_RATE_100HZ;
 	
