@@ -14,6 +14,7 @@
 
 #include "i2c.h"
 #include "stepper_control.h"
+#include "homing.h"
 
 #ifndef HW_VERSION_H
 #define HW_VERSION_H 1
@@ -331,10 +332,21 @@ void core_callback_t_before_exec(void)
 	}
 	
 	/* Notify moves that finished or were stopped since the last millisecond */
-	uint8_t motors_mask = motion_take_stopped_mask();
+	/* Homing legs stop many times; HomingState reports the outcome instead. The
+	   last leg's stop can surface just after homing ends, so stay quiet one more ms. */
+	static uint8_t homing_was_active = 0;
+	uint8_t homing_now = homing_active_mask();
+	uint8_t motors_mask = motion_take_stopped_mask() & (uint8_t)~(homing_now | homing_was_active);
+	homing_was_active = homing_now;
 	if (motors_mask)
 	{
 		send_motors_stopped_event(motors_mask);
+	}
+	
+	if (homing_take_changed())
+	{
+		app_regs.REG_HOMING_STATE = homing_state();
+		core_func_send_event(ADD_REG_HOMING_STATE, true);
 	}
 	
 	if (core_bool_is_visual_enabled())
@@ -377,6 +389,14 @@ void core_callback_t_1ms(void)
 {
 	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
 	{
+		/* Homing owns the motor: drop anything queued before it started */
+		if (homing_is_active(i))
+		{
+			user_requested_steps[i] = 0;
+			absolute_pending[i] = false;
+			continue;
+		}
+		
 		/* Absolute moves wait for an exact, settled position */
 		if (absolute_pending[i])
 		{
@@ -397,7 +417,8 @@ void core_callback_t_1ms(void)
 		}
 	}
 
-	/* Trapezoidal planner: speed update and position tracking for all motors */
+	/* Homing state machines start their next legs, then the planner runs */
+	homing_tick_1ms();
 	motion_tick_1ms();
 }
 

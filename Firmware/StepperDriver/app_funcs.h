@@ -133,6 +133,13 @@ void app_read_REG_MOTOR0_ACCELERATION(void);
 void app_read_REG_MOTOR1_ACCELERATION(void);
 void app_read_REG_MOTOR2_ACCELERATION(void);
 void app_read_REG_MOTOR3_ACCELERATION(void);
+void app_read_REG_HOME_MOTORS(void);
+void app_read_REG_HOMING_STATE(void);
+void app_read_REG_HOMING_CONFIG(void);
+void app_read_REG_HOMING_STEP_INTERVAL(void);
+void app_read_REG_HOMING_SLOW_STEP_INTERVAL(void);
+void app_read_REG_HOMING_SEARCH_DISTANCE(void);
+void app_read_REG_HOMING_BACKOFF(void);
 
 bool app_write_REG_ENABLE_MOTORS(void *a);
 bool app_write_REG_DISABLE_MOTORS(void *a);
@@ -247,6 +254,13 @@ bool app_write_REG_MOTOR0_ACCELERATION(void *a);
 bool app_write_REG_MOTOR1_ACCELERATION(void *a);
 bool app_write_REG_MOTOR2_ACCELERATION(void *a);
 bool app_write_REG_MOTOR3_ACCELERATION(void *a);
+bool app_write_REG_HOME_MOTORS(void *a);
+bool app_write_REG_HOMING_STATE(void *a);
+bool app_write_REG_HOMING_CONFIG(void *a);
+bool app_write_REG_HOMING_STEP_INTERVAL(void *a);
+bool app_write_REG_HOMING_SLOW_STEP_INTERVAL(void *a);
+bool app_write_REG_HOMING_SEARCH_DISTANCE(void *a);
+bool app_write_REG_HOMING_BACKOFF(void *a);
 
 
 #endif /* _APP_FUNCTIONS_H_ */

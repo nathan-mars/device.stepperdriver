@@ -22,7 +22,7 @@ TARGET    = StepperDriver
 BUILD     = build
 CORELIB   = ATxmega128A1U-1.15
 
-SRCS = app.c app_funcs.c app_ios_and_regs.c i2c.c interrupts.c main.c motion.c \
+SRCS = app.c app_funcs.c app_ios_and_regs.c homing.c i2c.c interrupts.c main.c motion.c \
        quick_movement.c regs_reset_and_init.c stepper_control.c
 OBJS = $(SRCS:%.c=$(BUILD)/%.o)
 DEPS = $(OBJS:.o=.d)

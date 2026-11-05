@@ -711,6 +711,161 @@ registers:
     address: 144
     description: Acceleration of motor 3 in steps per second squared, used by every move.
 
+  ##################################
+  # Homing (firmware 1.0)
+  ##################################
+  HomeMotors:
+    address: 145
+    type: U8
+    access: Write
+    maskType: StepperMotors
+    description: >-
+      Starts homing the motors in the bit mask against the endstop configured in HomingConfig.
+      Each motor runs its own sequence: if the sensor is already triggered it first moves away
+      until it releases (at most 4 x HomingBackoff pulses), then searches toward it at
+      HomingStepInterval (at most HomingSearchDistance pulses), backs off by HomingBackoff
+      pulses, and approaches again at HomingSlowStepInterval (at most 2 x HomingBackoff pulses).
+      The sensor is caught in an interrupt and the motor stops at the next pulse; that point
+      becomes position 0. A motor that is moving is stopped first. Motors already homing are
+      not restarted, so a later write can add motors while others are still homing. The write
+      is refused if a selected driver is disabled, its HomingSearchDistance is 0, or the motors
+      would exceed the CPU budget (see Motor0Acceleration). While homing, the motor's travel
+      limits are ignored (the limit registers are not changed), moves written to it are
+      refused, InputNOpMode stops do not apply to it, and it emits no MotorStopped events; the
+      outcome is reported by HomingState. StopMotors cancels homing, and DisableDigitalInputs
+      is refused for an endstop input in use. Acceleration and start
+      speed come from MotorNAcceleration and MotorNMaximumStepInterval.
+  HomingState:
+    address: 146
+    type: U8
+    access: Event
+    description: >-
+      Homing state of all motors, emitted whenever it changes. A motor is homed after a
+      successful homing; it is no longer homed when homing starts again, fails or is cancelled,
+      when its driver is disabled, or on a driver error or emergency stop.
+    payloadSpec:
+      Homed:
+        description: Specifies which motors are homed (position 0 is the endstop).
+        maskType: StepperMotors
+        mask: 0x0F
+      Homing:
+        description: Specifies which motors are homing now.
+        maskType: StepperMotors
+        mask: 0xF0
+  HomingConfig:
+    address: 147
+    type: U8
+    length: 4
+    access: Write
+    description: >-
+      Endstop configuration of each motor. Bits 0-1 select the digital input (0-3) wired to the
+      endstop; bit 4 (0x10) set means the endstop is at the positive end of travel (default:
+      negative end); bit 5 (0x20) set means the sensor pulls the line low when triggered
+      (default: the line goes high when triggered). Homing enables the input's interrupt, and
+      with it its DigitalInputState events. Default: motor n uses input n, negative end,
+      active high.
+    payloadSpec:
+      Motor0:
+        offset: 0
+        description: Endstop configuration of motor 0.
+      Motor1:
+        offset: 1
+        description: Endstop configuration of motor 1.
+      Motor2:
+        offset: 2
+        description: Endstop configuration of motor 2.
+      Motor3:
+        offset: 3
+        description: Endstop configuration of motor 3.
+  HomingStepInterval:
+    address: 148
+    type: U16
+    length: 4
+    access: Write
+    minValue: 10
+    maxValue: 16000
+    description: Time between pulses, in microseconds, while searching for the endstop and backing off from it (default 100).
+    payloadSpec:
+      Motor0:
+        offset: 0
+        description: Search step interval of motor 0, in microseconds.
+      Motor1:
+        offset: 1
+        description: Search step interval of motor 1, in microseconds.
+      Motor2:
+        offset: 2
+        description: Search step interval of motor 2, in microseconds.
+      Motor3:
+        offset: 3
+        description: Search step interval of motor 3, in microseconds.
+  HomingSlowStepInterval:
+    address: 149
+    type: U16
+    length: 4
+    access: Write
+    minValue: 10
+    maxValue: 16000
+    description: Time between pulses, in microseconds, for the final approach to the endstop (default 500). The motor always stops within one pulse of the sensor edge, but at speed the carriage leads the step count by up to tens of pulses, so a slow final approach is what makes position 0 repeatable.
+    payloadSpec:
+      Motor0:
+        offset: 0
+        description: Final approach step interval of motor 0, in microseconds.
+      Motor1:
+        offset: 1
+        description: Final approach step interval of motor 1, in microseconds.
+      Motor2:
+        offset: 2
+        description: Final approach step interval of motor 2, in microseconds.
+      Motor3:
+        offset: 3
+        description: Final approach step interval of motor 3, in microseconds.
+  HomingSearchDistance:
+    address: 150
+    type: U32
+    length: 4
+    access: Write
+    maxValue: 2147483647
+    description: >-
+      Maximum number of pulses travelled while searching for the endstop; set it a little above
+      the travel of the stage (e.g. 25600 = 32 mm at 1.25 um for a 30 mm stage). Homing fails if
+      the sensor is not found within it. This is the only protection against a disconnected or
+      dead endstop: an unplugged input reads as "not triggered" for an active-high sensor, so
+      the motor searches the full distance and pushes against the hard stop for whatever part
+      of it lies beyond the travel. The default 0 refuses HomeMotors for that motor until it is set.
+    payloadSpec:
+      Motor0:
+        offset: 0
+        description: Search distance of motor 0, in pulses.
+      Motor1:
+        offset: 1
+        description: Search distance of motor 1, in pulses.
+      Motor2:
+        offset: 2
+        description: Search distance of motor 2, in pulses.
+      Motor3:
+        offset: 3
+        description: Search distance of motor 3, in pulses.
+  HomingBackoff:
+    address: 151
+    type: U16
+    length: 4
+    access: Write
+    minValue: 1
+    description: Pulses to move away from the endstop between the search and the final approach (default 800). Must be larger than the sensor's hysteresis, or homing fails.
+    payloadSpec:
+      Motor0:
+        offset: 0
+        description: Backoff of motor 0, in pulses.
+      Motor1:
+        offset: 1
+        description: Backoff of motor 1, in pulses.
+      Motor2:
+        offset: 2
+        description: Backoff of motor 2, in pulses.
+      Motor3:
+        offset: 3
+        description: Backoff of motor 3, in pulses.
+
 ##################################
 # Bit masks
 ##################################

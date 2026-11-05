@@ -12,6 +12,7 @@ uv run 02_move_and_check.py --motor 1 --steps 12000 --speed-us 12.5 --accel 2000
 uv run 03_log_profile.py --motor 1 --out profile.csv
 uv run 04_limits_and_stop.py --motor 1
 uv run 07_home_move_timed.py --motor 0           # home, 15 mm out and back at 100 mm/s, timed, endstop drift check
+uv run 08_home_firmware.py --motors 0,1 --search 26000 --late 1   # firmware homing (HomeMotors), zero check
 
 # If `make flash` (Harp Toolkit) stops at 30 % with "did not respond with a bootloader
 # message", find out what the board does after a reset, then flash with the same protocol:

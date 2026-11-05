@@ -15,6 +15,7 @@ static void reset_all(void)
 	memset(pos, 0, sizeof pos);
 	sim_reset();
 	motion_init(pos);
+	homing_init();
 	motion_take_stopped_mask();
 }
 
@@ -282,6 +283,214 @@ static void test_jog(void)
 	CHECK(motion_jog(0, 10000.0f, true), "jog of cost 25 admitted next to cost 250");
 }
 
+/* ------------------------------------------------------------------------ */
+/* Homing                                                                    */
+/* ------------------------------------------------------------------------ */
+static homing_params_t home_params(uint8_t input)
+{
+	/* 100 us fast (12.5 mm/s at 1.25 um), 500 us slow, 30 mm search, 1 mm backoff */
+	homing_params_t p = { .config = input, .fast_us = 100, .slow_us = 500, .search = 26000, .backoff = 800 };
+	return p;
+}
+
+/* Put motor i at hardware position hw (and position register hw). */
+static void place(uint8_t i, int32_t hw) { sim[i].hw_position = hw; pos[i] = hw; }
+
+static int run_until_homing_done(uint8_t mask, int max_ms)
+{
+	for (int ms = 0; ms < max_ms; ms++) {
+		sim_run_ms(1);
+		if (!(homing_active_mask() & mask)) return ms + 1;
+	}
+	return -1;
+}
+
+static void test_homing_basic(void)
+{
+	printf("homing: basic, repeatability, profile restored\n");
+	reset_all();
+	sim_set_profile(0, 500.0f, 4000.0f, 1.0e5f);
+	place(0, 5000);
+	sim_set_endstop(0, 0, 0, true, false);         /* active-high sensor, active at hw <= 0 */
+	homing_params_t p = home_params(0);
+	homing_take_changed();
+	rec_n = 0;
+	sim_on_pulse = recorder;
+	homing_start(0, &p);
+	CHECK(homing_take_changed() && homing_state() == 0x10, "state after start 0x%02x", homing_state());
+	int ms = run_until_homing_done(1, 20000);
+	sim_on_pulse = 0;
+	CHECK(ms > 0, "homing did not finish");
+	CHECK(homing_homed_mask() == 1 && homing_state() == 0x01, "homed state 0x%02x", homing_state());
+	CHECK(homing_take_changed(), "change flag after homing");
+	sim_run_ms(5);
+	CHECK(pos[0] == 0, "position after homing %d", pos[0]);
+	CHECK(sim[0].hw_position == -1, "stopped at hw %d (edge 0, one pulse past)", sim[0].hw_position);
+	CHECK(motion_is_idle(0) && !sim[0].running, "motor idle after homing");
+	CHECK(motion[0].vmax == 4000.0f && motion[0].v0 == 500.0f, "profile not restored (v0 %.0f vmax %.0f)", motion[0].v0, motion[0].vmax);
+	/* 5001 search (to hw -1) + 800 backoff + 800 slow pulses; the last leg ran at 500 us, the search at 100 us */
+	CHECK(rec_n == 5001 + 800 + 800, "homing emitted %d pulses", rec_n);
+	uint16_t slow_min = 0xFFFF, fast_min = 0xFFFF;
+	for (int k = rec_n - 800; k < rec_n; k++) if (rec_per[k] < slow_min) slow_min = rec_per[k];
+	for (int k = 0; k < 5001; k++) if (rec_per[k] < fast_min) fast_min = rec_per[k];
+	CHECK(slow_min == 2000, "slow leg min period %u ticks (500 us = 2000)", slow_min);
+	CHECK(fast_min == 400, "search min period %u ticks (100 us = 400)", fast_min);
+	/* home again from another place: same hardware point */
+	motion_request(0, 3000);
+	run_until_idle(0, 5000);
+	homing_start(0, &p);
+	CHECK(homing_homed_mask() == 0, "homed bit cleared at start");
+	run_until_homing_done(1, 20000);
+	sim_run_ms(5);
+	CHECK(homing_homed_mask() == 1 && pos[0] == 0 && sim[0].hw_position == -1, "second home: pos %d hw %d", pos[0], sim[0].hw_position);
+	CHECK((motion_take_stopped_mask() & 1) != 0, "motion reported stops");
+}
+
+static void test_homing_starts_on_sensor(void)
+{
+	printf("homing: starting inside the sensor\n");
+	reset_all();
+	place(0, -300);
+	sim_set_endstop(0, 0, 0, true, false);
+	sim_endstop[0].hysteresis = 20;
+	CHECK(sim_endstop[0].active, "sensor active at start");
+	homing_params_t p = home_params(0);
+	homing_start(0, &p);
+	run_until_homing_done(1, 20000);
+	sim_run_ms(5);
+	CHECK(homing_homed_mask() == 1 && pos[0] == 0 && sim[0].hw_position == -1, "pos %d hw %d", pos[0], sim[0].hw_position);
+}
+
+static void test_homing_failures(void)
+{
+	printf("homing: failures\n");
+	/* sensor beyond the search distance */
+	reset_all();
+	place(0, 5000);
+	sim_set_endstop(0, 0, -30000, true, false);
+	homing_params_t p = home_params(0);
+	homing_start(0, &p);
+	run_until_homing_done(1, 30000);
+	sim_run_ms(5);
+	CHECK(homing_state() == 0, "not found: state 0x%02x", homing_state());
+	CHECK(sim[0].pulses == 26000, "not found: travelled %u pulses", sim[0].pulses);
+	/* wrong polarity: configured active-low, sensor is active-high and not triggered */
+	reset_all();
+	place(0, 5000);
+	sim_set_endstop(0, 0, 0, true, false);
+	p = home_params(0);
+	p.config |= HOMING_CFG_ACTIVE_LOW;
+	homing_start(0, &p);
+	run_until_homing_done(1, 30000);
+	sim_run_ms(5);
+	CHECK(homing_state() == 0, "wrong polarity: state 0x%02x", homing_state());
+	CHECK(sim[0].pulses == HOMING_CLEAR_BACKOFFS * 800 && sim[0].hw_position > 5000, "wrong polarity: travelled %u pulses to %d", sim[0].pulses, sim[0].hw_position);
+	/* backoff shorter than the sensor's hysteresis */
+	reset_all();
+	place(0, 5000);
+	sim_set_endstop(0, 0, 0, true, false);
+	sim_endstop[0].hysteresis = 100;
+	p = home_params(0);
+	p.backoff = 50;
+	homing_start(0, &p);
+	run_until_homing_done(1, 30000);
+	CHECK(homing_state() == 0, "short backoff: state 0x%02x", homing_state());
+	/* cancel in the middle of the search */
+	reset_all();
+	sim_set_profile(0, 500.0f, 4000.0f, 1.0e5f);
+	place(0, 5000);
+	sim_set_endstop(0, 0, 0, true, false);
+	p = home_params(0);
+	homing_start(0, &p);
+	sim_run_ms(100);
+	CHECK(sim[0].running, "searching");
+	homing_cancel(1);
+	sim_run_ms(3);
+	CHECK(homing_state() == 0 && !sim[0].running && motion_is_idle(0), "cancel: state 0x%02x", homing_state());
+	CHECK(pos[0] == sim[0].hw_position, "cancel: position %d hw %d", pos[0], sim[0].hw_position);
+	CHECK(motion[0].vmax == 4000.0f, "cancel: profile not restored");
+	homing_cancel(1);                                  /* no effect when idle */
+	CHECK(homing_state() == 0, "cancel when idle");
+	/* lost: driver disabled after homing */
+	homing_start(0, &p);
+	run_until_homing_done(1, 20000);
+	CHECK(homing_homed_mask() == 1, "homed before lost");
+	homing_take_changed();
+	homing_lost(1);
+	CHECK(homing_homed_mask() == 0 && homing_take_changed(), "lost clears homed");
+}
+
+static void test_homing_limits_and_direction(void)
+{
+	printf("homing: travel limits ignored, positive direction\n");
+	reset_all();
+	place(0, 5000);
+	motion_set_limits(0, 1000, 20000);                 /* stale limits would stop the search */
+	sim_set_endstop(0, 0, 0, true, false);
+	homing_params_t p = home_params(0);
+	homing_start(0, &p);
+	run_until_homing_done(1, 20000);
+	sim_run_ms(5);
+	CHECK(homing_homed_mask() == 1 && sim[0].hw_position == -1, "homed through a stale limit: hw %d", sim[0].hw_position);
+	/* limits are active again afterwards: at 0 with MinPosition 1000, a negative move cannot start */
+	motion_take_stopped_mask();
+	motion_request(0, -10);
+	sim_run_ms(5);
+	CHECK(sim[0].hw_position == -1, "limits restored after homing");
+	/* endstop at the positive end, active-low, on input 3 driving motor 1 */
+	reset_all();
+	place(1, -2000);
+	sim_set_endstop(3, 1, 7000, false, true);
+	p = home_params(3);
+	p.config |= HOMING_CFG_POSITIVE | HOMING_CFG_ACTIVE_LOW;
+	homing_start(1, &p);
+	CHECK(homing_input_mask() == 0x08, "input mask 0x%02x", homing_input_mask());
+	run_until_homing_done(2, 20000);
+	sim_run_ms(5);
+	CHECK(homing_homed_mask() == 2 && pos[1] == 0 && sim[1].hw_position == 7001, "positive: pos %d hw %d", pos[1], sim[1].hw_position);
+}
+
+static void test_homing_concurrent(void)
+{
+	printf("homing: several axes, late start, busy motor\n");
+	reset_all();
+	for (uint8_t i = 0; i < 4; i++) { place(i, 4000 + 1000 * i); sim_set_endstop(i, i, 0, true, false); }
+	homing_params_t p[4];
+	for (uint8_t i = 0; i < 4; i++) p[i] = home_params(i);
+	CHECK(homing_admit(0x05, p), "two axes at 100 us admitted");
+	homing_start(0, &p[0]);
+	homing_start(2, &p[2]);
+	sim_run_ms(50);
+	CHECK(homing_state() == 0x50, "0 and 2 homing: 0x%02x", homing_state());
+	/* motor 1 requested while 0 and 2 are searching */
+	CHECK(homing_admit(0x02, p), "third axis admitted while two are homing");
+	homing_start(1, &p[1]);
+	CHECK(homing_state() == 0x70, "0, 1, 2 homing: 0x%02x", homing_state());
+	/* a repeated request for an axis already homing is ignored (no restart) */
+	int32_t hw0 = sim[0].hw_position;
+	homing_start(0, &p[0]);
+	sim_run_ms(10);
+	CHECK(sim[0].hw_position < hw0, "axis 0 kept searching");
+	/* motor 3 is busy with a move: homing stops it first */
+	motion_request(3, 20000);
+	sim_run_ms(20);
+	CHECK(sim[3].running && sim[3].dir_positive, "motor 3 moving away");
+	homing_start(3, &p[3]);
+	int ms = run_until_homing_done(0x0F, 40000);
+	sim_run_ms(5);
+	CHECK(ms > 0 && homing_state() == 0x0F, "all homed: 0x%02x", homing_state());
+	for (uint8_t i = 0; i < 4; i++)
+		CHECK(pos[i] == 0 && sim[i].hw_position == -1, "axis %u: pos %d hw %d", i, pos[i], sim[i].hw_position);
+	/* admission: two axes at 10 us (cost 250 each) do not fit */
+	for (uint8_t i = 0; i < 4; i++) p[i].fast_us = 10;
+	CHECK(!homing_admit(0x03, p), "two fast axes refused");
+	CHECK(homing_admit(0x01, p), "one fast axis admitted");
+	/* ...and an axis between two legs keeps its share */
+	p[0].fast_us = 10;
+	homing_start(0, &p[0]);
+	CHECK(!homing_admit(0x02, p), "budget reserved for an axis between legs");
+}
+
 int main(void)
 {
 	test_jog();
@@ -292,6 +501,11 @@ int main(void)
 	test_retarget_and_stop();
 	test_legacy_accel();
 	test_set_position();
+	test_homing_basic();
+	test_homing_starts_on_sensor();
+	test_homing_failures();
+	test_homing_limits_and_direction();
+	test_homing_concurrent();
 	printf("%d checks, %d failures\n", checks, failures);
 	return failures ? 1 : 0;
 }

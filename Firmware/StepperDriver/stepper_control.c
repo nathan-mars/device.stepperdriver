@@ -11,6 +11,7 @@
  * all 16-bit accesses; the ISR touches only 8-bit registers.
  */
 #include "stepper_control.h"
+#include "homing.h"
 #include "motion_port.h"
 #include "app_ios_and_regs.h"
 #include "hwbp_core.h"
@@ -84,13 +85,19 @@ ISR(TCF0_OVF_vect) { MOTION_ISR_BODY(motion[3], STOP_TIMER(TCF0)); }
 /************************************************************************/
 static uint16_t reg_u16(const uint16_t *base, uint8_t i) { return base[i]; }
 
-void refresh_motor_profile(uint8_t i)
+static void load_motor_profile(uint8_t i)
 {
-	if (i >= MOTION_MOTORS) return;
 	uint16_t nominal = reg_u16(&app_regs.REG_MOTOR0_NOMINAL_STEP_INTERVAL, i);
 	uint16_t start   = reg_u16(&app_regs.REG_MOTOR0_MAXIMUM_STEP_INTERVAL, i);
 	uint32_t accel   = (&app_regs.REG_MOTOR0_ACCELERATION)[i];
 	motion_set_profile_us(i, nominal, start, accel);
+}
+
+void refresh_motor_profile(uint8_t i)
+{
+	if (i >= MOTION_MOTORS) return;
+	if (homing_is_active(i)) return;   /* homing sets its own speeds and reloads these when done */
+	load_motor_profile(i);
 }
 
 void refresh_motor_limits(uint8_t i)
@@ -103,6 +110,7 @@ void refresh_motor_limits(uint8_t i)
 bool initialize_motors(void)
 {
 	motion_init(app_regs.REG_ACCUMULATED_STEPS);
+	homing_init();
 	for (uint8_t i = 0; i < MOTION_MOTORS; i++) {
 		refresh_motor_profile(i);
 		refresh_motor_limits(i);
@@ -148,4 +156,33 @@ int32_t user_sent_request(int32_t requested_steps, uint8_t i)
 {
 	if (i >= MOTION_MOTORS) return 0;
 	return motion_request(i, requested_steps);
+}
+
+
+/************************************************************************/
+/* homing.h platform functions                                          */
+/************************************************************************/
+bool homing_hal_input_high(uint8_t input)
+{
+	switch (input) {
+		case 0:  return read_INPUT0 ? true : false;
+		case 1:  return read_INPUT1 ? true : false;
+		case 2:  return read_INPUT2 ? true : false;
+		default: return read_INPUT3 ? true : false;
+	}
+}
+
+void homing_hal_restore_profile(uint8_t i)
+{
+	if (i < MOTION_MOTORS) load_motor_profile(i);
+}
+
+bool motor_driver_off(uint8_t i)
+{
+	switch (i) {
+		case 0:  return read_DRIVE_ENABLE_M0 ? true : false;
+		case 1:  return read_DRIVE_ENABLE_M1 ? true : false;
+		case 2:  return read_DRIVE_ENABLE_M2 ? true : false;
+		default: return read_DRIVE_ENABLE_M3 ? true : false;
+	}
 }

@@ -65,6 +65,39 @@ use the same engine. Things worth knowing:
 - The engine is `StepperDriver/motion.c` (no AVR code) + `stepper_control.c` (timers,
   interrupts). The design is explained in `../Assets/trapezoidal-motion-explainer.html`.
 
+## Homing (firmware 1.0)
+
+Set the per-motor arrays once, then write a motor mask to `HomeMotors`:
+
+| Register | Address | Per motor | Default |
+|---|---|---|---|
+| `HomeMotors` | 145 | mask of motors to home | |
+| `HomingState` | 146 | event: homed (bits 0-3), homing (bits 4-7) | |
+| `HomingConfig` | 147 | input (bits 0-1), endstop at the positive end (0x10), active low (0x20) | input n, negative end, active high |
+| `HomingStepInterval` | 148 | µs between pulses, search and backoff | 100 |
+| `HomingSlowStepInterval` | 149 | µs between pulses, final approach | 500 |
+| `HomingSearchDistance` | 150 | maximum pulses searched | 0 (refuses homing until set) |
+| `HomingBackoff` | 151 | pulses backed off before the final approach | 800 |
+
+Each motor homes on its own: move off the sensor if it is already triggered, search fast,
+back off, approach slowly; the sensor edge (caught in the input interrupt, the motor stops
+at the next pulse) becomes position 0. Writing `HomeMotors` again while some motors are
+homing starts the new ones and leaves the others alone. A motor that is moving is stopped
+first. While homing, a motor ignores its travel limits (the registers are not changed),
+refuses moves, is not stopped by `Input{n}OpMode`, and sends no `MotorStopped` events
+(`DisableDigitalInputs` is refused for an endstop input in use);
+`HomingState` reports the result. `StopMotors` cancels homing; disabling the driver, a
+driver error or the emergency input clear the homed bit.
+
+Failure mode to know about: an unplugged input reads low, which an active-high endstop
+reports as "not triggered". Homing then searches the whole `HomingSearchDistance` and
+pushes against the hard stop for the part beyond the travel (seen on the bench: ~27 mm
+of stalling at 12.5 mm/s, 0.5 A). Keep the search distance only a little above the
+travel (32 mm for the 30 mm stages) and the current low. An active-low sensor would fail
+safe instead: unplugged it reads "triggered", and homing gives up after moving
+4 x `HomingBackoff` away from the endstop. The logic is
+`StepperDriver/homing.c` (no AVR code, covered by `make test`).
+
 ## Tests
 
 ```sh

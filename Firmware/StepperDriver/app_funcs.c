@@ -5,6 +5,7 @@
 #include "i2c.h"
 #include "stepper_control.h"
 #include "quick_movement.h"
+#include "homing.h"
 #include <avr/pgmspace.h>
 
 #define PERIOD_LIMIT 10      /* us between pulses; 100k pulses/s */
@@ -200,7 +201,14 @@ void (* const app_func_rd_pointer[])(void) PROGMEM = {
 	&app_read_REG_MOTOR0_ACCELERATION,
 	&app_read_REG_MOTOR1_ACCELERATION,
 	&app_read_REG_MOTOR2_ACCELERATION,
-	&app_read_REG_MOTOR3_ACCELERATION
+	&app_read_REG_MOTOR3_ACCELERATION,
+	&app_read_REG_HOME_MOTORS,
+	&app_read_REG_HOMING_STATE,
+	&app_read_REG_HOMING_CONFIG,
+	&app_read_REG_HOMING_STEP_INTERVAL,
+	&app_read_REG_HOMING_SLOW_STEP_INTERVAL,
+	&app_read_REG_HOMING_SEARCH_DISTANCE,
+	&app_read_REG_HOMING_BACKOFF
 };
 
 bool (* const app_func_wr_pointer[])(void*) PROGMEM = {
@@ -316,7 +324,14 @@ bool (* const app_func_wr_pointer[])(void*) PROGMEM = {
 	&app_write_REG_MOTOR0_ACCELERATION,
 	&app_write_REG_MOTOR1_ACCELERATION,
 	&app_write_REG_MOTOR2_ACCELERATION,
-	&app_write_REG_MOTOR3_ACCELERATION
+	&app_write_REG_MOTOR3_ACCELERATION,
+	&app_write_REG_HOME_MOTORS,
+	&app_write_REG_HOMING_STATE,
+	&app_write_REG_HOMING_CONFIG,
+	&app_write_REG_HOMING_STEP_INTERVAL,
+	&app_write_REG_HOMING_SLOW_STEP_INTERVAL,
+	&app_write_REG_HOMING_SEARCH_DISTANCE,
+	&app_write_REG_HOMING_BACKOFF
 };
 
 
@@ -372,6 +387,8 @@ void app_read_REG_DISABLE_MOTORS(void)
 bool app_write_REG_DISABLE_MOTORS(void *a)
 {
 	uint8_t reg = *((uint8_t*)a);
+	
+	homing_lost(reg & 0x0F);   /* the motor can move freely without holding torque */
 	
 	if (reg & B_MOTOR0)
 	{
@@ -505,6 +522,9 @@ bool app_write_REG_DISABLE_INPUTS(void *a)
 {
 	uint8_t reg = *((uint8_t*)a);
 	
+	/* A homing axis would search its full distance without its endstop interrupt */
+	if (reg & homing_input_mask()) return false;
+	
 	if (reg & B_INPUT0)
 	{
 		io_pin2in(&PORTK, 5, PULL_IO_UP, SENSE_IO_NO_INT_USED);
@@ -513,7 +533,7 @@ bool app_write_REG_DISABLE_INPUTS(void *a)
 	
 	if (reg & B_INPUT1)
 	{
-		io_set_int(&PORTK, INT_LEVEL_OFF, 0, (1<<5), false);
+		io_pin2in(&PORTQ, 2, PULL_IO_UP, SENSE_IO_NO_INT_USED);
 		io_set_int(&PORTQ, INT_LEVEL_OFF, 0, (1<<2), false);
 	}
 	
@@ -1309,6 +1329,8 @@ bool app_write_REG_MOTORS_STEPS(void *a)
 	if ((reg[1] != 0) && read_DRIVE_ENABLE_M1) return false;
 	if ((reg[2] != 0) && read_DRIVE_ENABLE_M2) return false;
 	if ((reg[3] != 0) && read_DRIVE_ENABLE_M3) return false;
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+		if (reg[i] != 0 && homing_is_active(i)) return false;
 	
 	if ((reg[0] != 0) && !motion_admit(0)) return false;
 	if ((reg[1] != 0) && !motion_admit(1)) return false;
@@ -1335,6 +1357,8 @@ void app_read_REG_MOTOR0_STEPS(void) {}
 bool app_write_REG_MOTOR0_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
+
+	if (homing_is_active(0)) return false;   /* homing owns the motor; StopMotors cancels it */
 
 	if (reg != 0)
 	{
@@ -1364,6 +1388,8 @@ bool app_write_REG_MOTOR1_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
 
+	if (homing_is_active(1)) return false;   /* homing owns the motor; StopMotors cancels it */
+
 	if (reg != 0)
 	{
 		if (read_DRIVE_ENABLE_M1)
@@ -1392,6 +1418,8 @@ bool app_write_REG_MOTOR2_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
 
+	if (homing_is_active(2)) return false;   /* homing owns the motor; StopMotors cancels it */
+
 	if (reg != 0)
 	{
 		if (read_DRIVE_ENABLE_M2)
@@ -1419,6 +1447,8 @@ void app_read_REG_MOTOR3_STEPS(void) {}
 bool app_write_REG_MOTOR3_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
+
+	if (homing_is_active(3)) return false;   /* homing owns the motor; StopMotors cancels it */
 
 	if (reg != 0)
 	{
@@ -1452,6 +1482,8 @@ bool app_write_REG_MOTORS_ABSOLUTE_STEPS(void *a)
 	if ((reg[1] != app_regs.REG_ACCUMULATED_STEPS[1]) && read_DRIVE_ENABLE_M1) return false;
 	if ((reg[2] != app_regs.REG_ACCUMULATED_STEPS[2]) && read_DRIVE_ENABLE_M2) return false;
 	if ((reg[3] != app_regs.REG_ACCUMULATED_STEPS[3]) && read_DRIVE_ENABLE_M3) return false;
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+		if (reg[i] != app_regs.REG_ACCUMULATED_STEPS[i] && homing_is_active(i)) return false;
 	
 	if (reg[0] != app_regs.REG_ACCUMULATED_STEPS[0]) app_write_REG_MOTOR0_ABSOLUTE_STEPS(reg+0);
 	if (reg[1] != app_regs.REG_ACCUMULATED_STEPS[1]) app_write_REG_MOTOR1_ABSOLUTE_STEPS(reg+1);
@@ -1473,6 +1505,8 @@ void app_read_REG_MOTOR0_ABSOLUTE_STEPS(void) {}
 bool app_write_REG_MOTOR0_ABSOLUTE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
+
+	if (homing_is_active(0)) return false;   /* homing owns the motor; StopMotors cancels it */
 	
 	if (reg != app_regs.REG_ACCUMULATED_STEPS[0])
 	{
@@ -1502,6 +1536,8 @@ void app_read_REG_MOTOR1_ABSOLUTE_STEPS(void) {}
 bool app_write_REG_MOTOR1_ABSOLUTE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
+
+	if (homing_is_active(1)) return false;   /* homing owns the motor; StopMotors cancels it */
 	
 	if (reg != app_regs.REG_ACCUMULATED_STEPS[1])
 	{
@@ -1531,6 +1567,8 @@ void app_read_REG_MOTOR2_ABSOLUTE_STEPS(void) {}
 bool app_write_REG_MOTOR2_ABSOLUTE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
+
+	if (homing_is_active(2)) return false;   /* homing owns the motor; StopMotors cancels it */
 	
 	if (reg != app_regs.REG_ACCUMULATED_STEPS[2])
 	{
@@ -1560,6 +1598,8 @@ void app_read_REG_MOTOR3_ABSOLUTE_STEPS(void) {}
 bool app_write_REG_MOTOR3_ABSOLUTE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
+
+	if (homing_is_active(3)) return false;   /* homing owns the motor; StopMotors cancels it */
 	
 	if (reg != app_regs.REG_ACCUMULATED_STEPS[3])
 	{
@@ -1839,6 +1879,8 @@ bool app_write_REG_MOTORS_IMMEDIATE_STEPS(void *a)
 	if (reg[1]) if (read_DRIVE_ENABLE_M1) return false;
 	if (reg[2]) if (read_DRIVE_ENABLE_M2) return false;
 	if (reg[3]) if (read_DRIVE_ENABLE_M3) return false;
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+		if (reg[i] != 0 && homing_is_active(i)) return false;
 	
 	app_write_REG_MOTOR0_IMMEDIATE_STEPS(reg+0);
 	app_write_REG_MOTOR1_IMMEDIATE_STEPS(reg+1);
@@ -1860,6 +1902,8 @@ void app_read_REG_MOTOR0_IMMEDIATE_STEPS(void) {}
 bool app_write_REG_MOTOR0_IMMEDIATE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
+
+	if (homing_is_active(0)) return false;   /* homing owns the motor; StopMotors cancels it */
 
 	/* Constant-speed rotation: |reg| is the pulse interval in us, sign is direction, 0 stops */
 	if (reg) if (read_DRIVE_ENABLE_M0) return false;
@@ -1891,6 +1935,8 @@ bool app_write_REG_MOTOR1_IMMEDIATE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
 
+	if (homing_is_active(1)) return false;   /* homing owns the motor; StopMotors cancels it */
+
 	/* Constant-speed rotation: |reg| is the pulse interval in us, sign is direction, 0 stops */
 	if (reg) if (read_DRIVE_ENABLE_M1) return false;
 
@@ -1920,6 +1966,8 @@ void app_read_REG_MOTOR2_IMMEDIATE_STEPS(void) {}
 bool app_write_REG_MOTOR2_IMMEDIATE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
+
+	if (homing_is_active(2)) return false;   /* homing owns the motor; StopMotors cancels it */
 
 	/* Constant-speed rotation: |reg| is the pulse interval in us, sign is direction, 0 stops */
 	if (reg) if (read_DRIVE_ENABLE_M2) return false;
@@ -1951,6 +1999,8 @@ bool app_write_REG_MOTOR3_IMMEDIATE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
 
+	if (homing_is_active(3)) return false;   /* homing owns the motor; StopMotors cancels it */
+
 	/* Constant-speed rotation: |reg| is the pulse interval in us, sign is direction, 0 stops */
 	if (reg) if (read_DRIVE_ENABLE_M3) return false;
 
@@ -1981,6 +2031,7 @@ bool app_write_REG_STOP_MOTORS_SUDENTLY(void *a)
 {
 	uint8_t reg = *((uint8_t*)a);
 	
+	homing_cancel(reg);
 	if (reg & B_MOTOR0) stop_rotation (0);
 	if (reg & B_MOTOR1) stop_rotation (1);
 	if (reg & B_MOTOR2) stop_rotation (2);
@@ -2369,6 +2420,7 @@ bool app_write_REG_START_QUICK_MOVEMENT(void *a)
 
 	/* Validate both motors before moving either */
 	if (reg & (B_MOTOR0 | B_MOTOR3)) return false;
+	if (reg & homing_active_mask()) return false;
 	if (reg & B_MOTOR1)
 	{
 		if (read_DRIVE_ENABLE_M1) return false;
@@ -2613,3 +2665,152 @@ bool app_write_REG_MOTOR3_ACCELERATION(void *a)
 	return true;
 }
 
+
+
+
+/************************************************************************/
+/* Homing                                                               */
+/************************************************************************/
+static void enable_input_interrupt(uint8_t input)
+{
+	switch (input)
+	{
+		case 0: io_pin2in(&PORTK, 5, PULL_IO_UP, SENSE_IO_EDGES_BOTH); io_set_int(&PORTK, INT_LEVEL_LOW, 0, (1<<5), false); break;
+		case 1: io_pin2in(&PORTQ, 2, PULL_IO_UP, SENSE_IO_EDGES_BOTH); io_set_int(&PORTQ, INT_LEVEL_LOW, 0, (1<<2), false); break;
+		case 2: io_pin2in(&PORTC, 5, PULL_IO_UP, SENSE_IO_EDGES_BOTH); io_set_int(&PORTC, INT_LEVEL_LOW, 0, (1<<5), false); break;
+		default: io_pin2in(&PORTH, 7, PULL_IO_UP, SENSE_IO_EDGES_BOTH); io_set_int(&PORTH, INT_LEVEL_LOW, 0, (1<<7), false); break;
+	}
+}
+
+static void homing_params_of(uint8_t i, homing_params_t *p)
+{
+	p->config  = app_regs.REG_HOMING_CONFIG[i];
+	p->fast_us = app_regs.REG_HOMING_STEP_INTERVAL[i];
+	p->slow_us = app_regs.REG_HOMING_SLOW_STEP_INTERVAL[i];
+	p->search  = app_regs.REG_HOMING_SEARCH_DISTANCE[i];
+	p->backoff = app_regs.REG_HOMING_BACKOFF[i];
+}
+
+/************************************************************************/
+/* REG_HOME_MOTORS                                                      */
+/************************************************************************/
+void app_read_REG_HOME_MOTORS(void)
+{
+	app_regs.REG_HOME_MOTORS = homing_active_mask();
+}
+
+bool app_write_REG_HOME_MOTORS(void *a)
+{
+	uint8_t reg = *((uint8_t*)a);
+	homing_params_t p[MOTORS_QUANTITY];
+
+	if (reg & 0xF0) return false;
+
+	/* Axes already homing keep going; only the others start (all or none) */
+	uint8_t start = reg & (uint8_t)~homing_active_mask();
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+	{
+		homing_params_of(i, &p[i]);
+		if (!(start & (1 << i))) continue;
+		if (motor_driver_off(i)) return false;
+		if (p[i].search == 0) return false;   /* search distance not configured */
+	}
+	if (start && !homing_admit(start, p)) return false;
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+	{
+		if (!(start & (1 << i))) continue;
+		enable_input_interrupt(p[i].config & HOMING_CFG_INPUT_MASK);
+		homing_start(i, &p[i]);   /* stops a move in progress, then homes */
+	}
+
+	app_regs.REG_HOME_MOTORS = reg;
+	return true;
+}
+
+/************************************************************************/
+/* REG_HOMING_STATE                                                     */
+/************************************************************************/
+void app_read_REG_HOMING_STATE(void)
+{
+	app_regs.REG_HOMING_STATE = homing_state();
+}
+
+bool app_write_REG_HOMING_STATE(void *a) { return false; }
+
+/************************************************************************/
+/* REG_HOMING_CONFIG                                                    */
+/************************************************************************/
+void app_read_REG_HOMING_CONFIG(void) {}
+bool app_write_REG_HOMING_CONFIG(void *a)
+{
+	uint8_t *reg = ((uint8_t*)a);
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+		if (reg[i] & (uint8_t)~HOMING_CFG_VALID_BITS) return false;
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++) app_regs.REG_HOMING_CONFIG[i] = reg[i];
+	return true;
+}
+
+/************************************************************************/
+/* REG_HOMING_STEP_INTERVAL and REG_HOMING_SLOW_STEP_INTERVAL           */
+/************************************************************************/
+static bool valid_intervals(const uint16_t *reg)
+{
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+		if (reg[i] < PERIOD_LIMIT || reg[i] > 16000) return false;
+	return true;
+}
+
+void app_read_REG_HOMING_STEP_INTERVAL(void) {}
+bool app_write_REG_HOMING_STEP_INTERVAL(void *a)
+{
+	uint16_t *reg = ((uint16_t*)a);
+
+	if (!valid_intervals(reg)) return false;
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++) app_regs.REG_HOMING_STEP_INTERVAL[i] = reg[i];
+	return true;
+}
+
+void app_read_REG_HOMING_SLOW_STEP_INTERVAL(void) {}
+bool app_write_REG_HOMING_SLOW_STEP_INTERVAL(void *a)
+{
+	uint16_t *reg = ((uint16_t*)a);
+
+	if (!valid_intervals(reg)) return false;
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++) app_regs.REG_HOMING_SLOW_STEP_INTERVAL[i] = reg[i];
+	return true;
+}
+
+/************************************************************************/
+/* REG_HOMING_SEARCH_DISTANCE                                           */
+/************************************************************************/
+void app_read_REG_HOMING_SEARCH_DISTANCE(void) {}
+bool app_write_REG_HOMING_SEARCH_DISTANCE(void *a)
+{
+	uint32_t *reg = ((uint32_t*)a);
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+		if (reg[i] > 0x7FFFFFFFUL) return false;
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++) app_regs.REG_HOMING_SEARCH_DISTANCE[i] = reg[i];
+	return true;
+}
+
+/************************************************************************/
+/* REG_HOMING_BACKOFF                                                   */
+/************************************************************************/
+void app_read_REG_HOMING_BACKOFF(void) {}
+bool app_write_REG_HOMING_BACKOFF(void *a)
+{
+	uint16_t *reg = ((uint16_t*)a);
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+		if (reg[i] == 0) return false;
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++) app_regs.REG_HOMING_BACKOFF[i] = reg[i];
+	return true;
+}

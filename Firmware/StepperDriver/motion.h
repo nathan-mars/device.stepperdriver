@@ -76,6 +76,8 @@ void motion_init(int32_t *pos);
 
 /* Travel limits in position units; 0 disables a limit (as the registers define). */
 void motion_set_limits(uint8_t i, int32_t min_lim, int32_t max_lim);
+/* Suspend (true) or restore the travel limits of axis i, e.g. while homing. */
+void motion_ignore_limits(uint8_t i, bool ignore);
 
 /* Profile in register units (microseconds between pulses) or directly in pulses/s. */
 void motion_set_profile_us(uint8_t i, uint16_t nominal_us, uint16_t start_us, uint32_t accel_pulses_s2);
@@ -88,6 +90,10 @@ uint32_t motion_legacy_accel(uint16_t nominal_us, uint16_t start_us, uint16_t dp
 /* True if starting motor i at its configured speed fits the CPU budget next to
  * the motors already moving. Cheap integer arithmetic, safe from any context. */
 bool motion_admit(uint8_t i);
+/* CPU cost (permille) of one motor pulsing at v pulses/s, and of the motors
+ * moving now, leaving out those in exclude_mask. */
+uint16_t motion_cost_permille(float v);
+uint16_t motion_running_cost_permille(uint8_t exclude_mask);
 
 /* Relative move request, same contract as the old user_sent_request():
  * starts a move, or extends/shortens the current one. Returns the part of the
