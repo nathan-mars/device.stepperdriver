@@ -133,7 +133,7 @@ registers:
     defaultValue: 250
     type: U16
     access: Write
-    description: Configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.
+    description: Configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.
   Motor1StepInterval:
     <<: *nominalinterval
     address: 55
@@ -154,7 +154,7 @@ registers:
     defaultValue: 2000
     type: U16
     access: Write
-    description: Configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.
+    description: Configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.
   Motor1MaximumStepInterval:
     <<: *maxinterval
     address: 59

@@ -5,7 +5,7 @@
  * host-side unit tests (../tests) compile the exact code that runs on the board.
  * Hardware access goes through the small HAL declared in motion_port.h.
  *
- * Architecture (see Assets/trapezoidal-motion-explainer.html):
+ * Architecture:
  *   - The STEP pulse train is produced by a hardware timer in PWM mode.
  *   - One interrupt per pulse (MOTION_ISR_BODY) only decrements `remaining`
  *     and stops the timer when the move is complete or a stop was requested.

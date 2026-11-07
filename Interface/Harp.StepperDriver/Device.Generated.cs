@@ -3268,9 +3268,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.
+    /// Represents a register that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.
     /// </summary>
-    [Description("Configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.")]
+    [Description("Configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.")]
     public partial class Motor0StepInterval
     {
         /// <summary>
@@ -3652,9 +3652,9 @@ namespace Harp.StepperDriver
     }
 
     /// <summary>
-    /// Represents a register that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.
+    /// Represents a register that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.
     /// </summary>
-    [Description("Configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.")]
+    [Description("Configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.")]
     public partial class Motor0MaximumStepInterval
     {
         /// <summary>
@@ -13177,18 +13177,18 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.
+    /// that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.
     /// </summary>
     [DisplayName("Motor0StepIntervalPayload")]
-    [Description("Creates a message payload that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.")]
+    [Description("Creates a message payload that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.")]
     public partial class CreateMotor0StepIntervalPayload
     {
         /// <summary>
-        /// Gets or sets the value that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.
+        /// Gets or sets the value that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.
         /// </summary>
         [Range(min: 10, max: 16000)]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Description("The value that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.")]
+        [Description("The value that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.")]
         public ushort Motor0StepInterval { get; set; } = 250;
 
         /// <summary>
@@ -13201,7 +13201,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.
+        /// Creates a message that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the Motor0StepInterval register.</returns>
@@ -13213,14 +13213,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.
+    /// that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.
     /// </summary>
     [DisplayName("TimestampedMotor0StepIntervalPayload")]
-    [Description("Creates a timestamped message payload that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.")]
+    [Description("Creates a timestamped message payload that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.")]
     public partial class CreateTimestampedMotor0StepIntervalPayload : CreateMotor0StepIntervalPayload
     {
         /// <summary>
-        /// Creates a timestamped message that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile.
+        /// Creates a timestamped message that configures the time between step motor pulses (us) when running at nominal speed for motor 0. This is the cruise speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>
@@ -13401,18 +13401,18 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a message payload
-    /// that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.
+    /// that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.
     /// </summary>
     [DisplayName("Motor0MaximumStepIntervalPayload")]
-    [Description("Creates a message payload that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.")]
+    [Description("Creates a message payload that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.")]
     public partial class CreateMotor0MaximumStepIntervalPayload
     {
         /// <summary>
-        /// Gets or sets the value that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.
+        /// Gets or sets the value that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.
         /// </summary>
         [Range(min: 10, max: 16000)]
         [Editor(DesignTypes.NumericUpDownEditor, DesignTypes.UITypeEditor)]
-        [Description("The value that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.")]
+        [Description("The value that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.")]
         public ushort Motor0MaximumStepInterval { get; set; } = 2000;
 
         /// <summary>
@@ -13425,7 +13425,7 @@ namespace Harp.StepperDriver
         }
 
         /// <summary>
-        /// Creates a message that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.
+        /// Creates a message that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.
         /// </summary>
         /// <param name="messageType">Specifies the type of the created message.</param>
         /// <returns>A new message for the Motor0MaximumStepInterval register.</returns>
@@ -13437,14 +13437,14 @@ namespace Harp.StepperDriver
 
     /// <summary>
     /// Represents an operator that creates a timestamped message payload
-    /// that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.
+    /// that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.
     /// </summary>
     [DisplayName("TimestampedMotor0MaximumStepIntervalPayload")]
-    [Description("Creates a timestamped message payload that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.")]
+    [Description("Creates a timestamped message payload that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.")]
     public partial class CreateTimestampedMotor0MaximumStepIntervalPayload : CreateMotor0MaximumStepIntervalPayload
     {
         /// <summary>
-        /// Creates a timestamped message that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile.
+        /// Creates a timestamped message that configures the time between step motor pulses (us) used when starting or stopping a movement for motor 0. This is the start/stop speed of the trapezoidal profile. The range is 10 to 16000 us (firmware 0.9 allowed 100 to 20000); the upper limit is the 16-bit pulse timer at 0.25 us resolution.
         /// </summary>
         /// <param name="timestamp">The timestamp of the message payload, in seconds.</param>
         /// <param name="messageType">Specifies the type of the created message.</param>

@@ -62,8 +62,11 @@ use the same engine. Things worth knowing:
   under 30% (one motor at 10 µs between pulses, two at 17 µs, four at 34 µs).
 - Travel limits (`Motor{n}MaxPosition` / `MinPosition`) clamp the target, so a move
   decelerates into the limit instead of stopping abruptly.
+- Step intervals range from 10 to 16000 µs (0.9 allowed 100 to 20000). The pulse timer
+  counts in 0.25 µs to keep fast speeds accurate, and its 16-bit period ends at 16.38 ms;
+  writes above 16000 are refused.
 - The engine is `StepperDriver/motion.c` (no AVR code) + `stepper_control.c` (timers,
-  interrupts). The design is explained in `../Assets/trapezoidal-motion-explainer.html`.
+  interrupts). The architecture is summarized at the top of `StepperDriver/motion.h`.
 
 ## Homing (firmware 1.0)
 
