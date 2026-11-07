@@ -479,6 +479,17 @@ typedef struct
 	float REG_MOTOR2_QUICK_ACCELERATION;
 	float REG_MOTOR1_QUICK_DISTANCE;
 	float REG_MOTOR2_QUICK_DISTANCE;
+	uint32_t REG_MOTOR0_ACCELERATION;
+	uint32_t REG_MOTOR1_ACCELERATION;
+	uint32_t REG_MOTOR2_ACCELERATION;
+	uint32_t REG_MOTOR3_ACCELERATION;
+	uint8_t REG_HOME_MOTORS;
+	uint8_t REG_HOMING_STATE;
+	uint8_t REG_HOMING_CONFIG[4];
+	uint16_t REG_HOMING_STEP_INTERVAL[4];
+	uint16_t REG_HOMING_SLOW_STEP_INTERVAL[4];
+	uint32_t REG_HOMING_SEARCH_DISTANCE[4];
+	uint16_t REG_HOMING_BACKOFF[4];
 } AppRegs;
 
 /************************************************************************/
@@ -594,6 +605,17 @@ typedef struct
 #define ADD_REG_MOTOR2_QUICK_ACCELERATION  138 // FLOAT  Configures the motor's acceleration in m/s2 for motor 2.
 #define ADD_REG_MOTOR1_QUICK_DISTANCE      139 // FLOAT  Configures the motor's travel distance in mm for motor 1.
 #define ADD_REG_MOTOR2_QUICK_DISTANCE      140 // FLOAT  Configures the motor's travel distance in mm for motor 2.
+#define ADD_REG_MOTOR0_ACCELERATION        141 // U32    Acceleration of motor 0 in steps/s^2 (trapezoidal profile).
+#define ADD_REG_MOTOR1_ACCELERATION        142 // U32    Acceleration of motor 1 in steps/s^2 (trapezoidal profile).
+#define ADD_REG_MOTOR2_ACCELERATION        143 // U32    Acceleration of motor 2 in steps/s^2 (trapezoidal profile).
+#define ADD_REG_MOTOR3_ACCELERATION        144 // U32    Acceleration of motor 3 in steps/s^2 (trapezoidal profile).
+#define ADD_REG_HOME_MOTORS                145 // U8     Starts homing the motors in the bit mask.
+#define ADD_REG_HOMING_STATE               146 // U8     Homed motors (bits 0-3) and motors homing (bits 4-7). Event on change.
+#define ADD_REG_HOMING_CONFIG              147 // U8[4]  Per motor: endstop input (bits 0-1), positive direction (bit 4), active low (bit 5).
+#define ADD_REG_HOMING_STEP_INTERVAL       148 // U16[4] Per motor: us between pulses for the search and the backoff.
+#define ADD_REG_HOMING_SLOW_STEP_INTERVAL  149 // U16[4] Per motor: us between pulses for the final approach.
+#define ADD_REG_HOMING_SEARCH_DISTANCE     150 // U32[4] Per motor: maximum pulses travelled looking for the endstop (0 = homing refused).
+#define ADD_REG_HOMING_BACKOFF             151 // U16[4] Per motor: pulses to back off before the final approach.
 
 /************************************************************************/
 /* PWM Generator registers' memory limits                               */
@@ -603,8 +625,8 @@ typedef struct
 /************************************************************************/
 /* Memory limits */
 #define APP_REGS_ADD_MIN                    0x20
-#define APP_REGS_ADD_MAX                    0x8C
-#define APP_NBYTES_OF_REG_BANK              338
+#define APP_REGS_ADD_MAX                    0x97
+#define APP_NBYTES_OF_REG_BANK              400
 
 /************************************************************************/
 /* Registers' bits                                                      */

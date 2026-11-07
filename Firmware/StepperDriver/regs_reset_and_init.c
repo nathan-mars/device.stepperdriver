@@ -4,6 +4,7 @@
 
 #include "app.h"
 #include "app_funcs.h"
+#include "stepper_control.h"
 #include "app_ios_and_regs.h"
 
 extern AppRegs app_regs;
@@ -47,6 +48,27 @@ void core_callback_reset_registers(void)
 	app_regs.REG_MOTOR3_NOMINAL_STEP_INTERVAL = 250;
 	app_regs.REG_MOTOR3_MAXIMUM_STEP_INTERVAL = 2000;
 	app_regs.REG_MOTOR3_STEP_ACCELERATION_INTERVAL = 10;	
+
+	/* Trapezoidal acceleration (steps/s^2). The default matches the duration of
+	   the old default ramp (2000 us -> 250 us at 10 us per pulse, ~0.2 s). */
+	app_regs.REG_MOTOR0_ACCELERATION = 17778;
+	app_regs.REG_MOTOR1_ACCELERATION = 17778;
+	app_regs.REG_MOTOR2_ACCELERATION = 17778;
+	app_regs.REG_MOTOR3_ACCELERATION = 17778;
+
+	/* Homing: motor n on input n, endstop at the negative end, active high;
+	   100 us search, 500 us final approach, 800 pulses backoff. The search
+	   distance must be set by the user (0 refuses HomeMotors). */
+	for (uint8_t i = 0; i < 4; i++)
+	{
+		app_regs.REG_HOMING_CONFIG[i] = i;
+		app_regs.REG_HOMING_STEP_INTERVAL[i] = 100;
+		app_regs.REG_HOMING_SLOW_STEP_INTERVAL[i] = 500;
+		app_regs.REG_HOMING_SEARCH_DISTANCE[i] = 0;
+		app_regs.REG_HOMING_BACKOFF[i] = 800;
+	}
+	app_regs.REG_HOME_MOTORS = 0;
+	app_regs.REG_HOMING_STATE = 0;
 	
 	app_regs.REG_ENCODERS_UPDATE_RATE = GM_RATE_100HZ;
 	
@@ -102,7 +124,7 @@ void core_callback_registers_were_reinitialized(void)
 	app_write_REG_MOTOR0_HOLD_CURRENT_REDUCTION(&app_regs.REG_MOTOR0_HOLD_CURRENT_REDUCTION);
 	app_write_REG_MOTOR0_NOMINAL_STEP_INTERVAL(&app_regs.REG_MOTOR0_NOMINAL_STEP_INTERVAL);
 	app_write_REG_MOTOR0_MAXIMUM_STEP_INTERVAL(&app_regs.REG_MOTOR0_MAXIMUM_STEP_INTERVAL);
-	app_write_REG_MOTOR0_STEP_ACCELERATION_INTERVAL(&app_regs.REG_MOTOR0_STEP_ACCELERATION_INTERVAL);
+	app_write_REG_MOTOR0_ACCELERATION(&app_regs.REG_MOTOR0_ACCELERATION);
 	
 	app_write_REG_MOTOR1_OPERATION_MODE(&app_regs.REG_MOTOR1_OPERATION_MODE);
 	app_write_REG_MOTOR1_MICROSTEP_RESOLUTION(&app_regs.REG_MOTOR1_MICROSTEP_RESOLUTION);
@@ -110,7 +132,7 @@ void core_callback_registers_were_reinitialized(void)
 	app_write_REG_MOTOR1_HOLD_CURRENT_REDUCTION(&app_regs.REG_MOTOR1_HOLD_CURRENT_REDUCTION);
 	app_write_REG_MOTOR1_NOMINAL_STEP_INTERVAL(&app_regs.REG_MOTOR1_NOMINAL_STEP_INTERVAL);
 	app_write_REG_MOTOR1_MAXIMUM_STEP_INTERVAL(&app_regs.REG_MOTOR1_MAXIMUM_STEP_INTERVAL);
-	app_write_REG_MOTOR1_STEP_ACCELERATION_INTERVAL(&app_regs.REG_MOTOR1_STEP_ACCELERATION_INTERVAL);
+	app_write_REG_MOTOR1_ACCELERATION(&app_regs.REG_MOTOR1_ACCELERATION);
 	
 	app_write_REG_MOTOR2_OPERATION_MODE(&app_regs.REG_MOTOR2_OPERATION_MODE);
 	app_write_REG_MOTOR2_MICROSTEP_RESOLUTION(&app_regs.REG_MOTOR2_MICROSTEP_RESOLUTION);
@@ -118,7 +140,7 @@ void core_callback_registers_were_reinitialized(void)
 	app_write_REG_MOTOR2_HOLD_CURRENT_REDUCTION(&app_regs.REG_MOTOR2_HOLD_CURRENT_REDUCTION);
 	app_write_REG_MOTOR2_NOMINAL_STEP_INTERVAL(&app_regs.REG_MOTOR2_NOMINAL_STEP_INTERVAL);
 	app_write_REG_MOTOR2_MAXIMUM_STEP_INTERVAL(&app_regs.REG_MOTOR2_MAXIMUM_STEP_INTERVAL);
-	app_write_REG_MOTOR2_STEP_ACCELERATION_INTERVAL(&app_regs.REG_MOTOR2_STEP_ACCELERATION_INTERVAL);
+	app_write_REG_MOTOR2_ACCELERATION(&app_regs.REG_MOTOR2_ACCELERATION);
 	
 	app_write_REG_MOTOR3_OPERATION_MODE(&app_regs.REG_MOTOR3_OPERATION_MODE);
 	app_write_REG_MOTOR3_MICROSTEP_RESOLUTION(&app_regs.REG_MOTOR3_MICROSTEP_RESOLUTION);
@@ -126,7 +148,7 @@ void core_callback_registers_were_reinitialized(void)
 	app_write_REG_MOTOR3_HOLD_CURRENT_REDUCTION(&app_regs.REG_MOTOR3_HOLD_CURRENT_REDUCTION);
 	app_write_REG_MOTOR3_NOMINAL_STEP_INTERVAL(&app_regs.REG_MOTOR3_NOMINAL_STEP_INTERVAL);
 	app_write_REG_MOTOR3_MAXIMUM_STEP_INTERVAL(&app_regs.REG_MOTOR3_MAXIMUM_STEP_INTERVAL);
-	app_write_REG_MOTOR3_STEP_ACCELERATION_INTERVAL(&app_regs.REG_MOTOR3_STEP_ACCELERATION_INTERVAL);
+	app_write_REG_MOTOR3_ACCELERATION(&app_regs.REG_MOTOR3_ACCELERATION);
 	
 	app_read_REG_MOTORS_ERROR_DETECTTION();
 	app_read_REG_DIGITAL_INPUTS_STATE();
@@ -137,6 +159,11 @@ void core_callback_registers_were_reinitialized(void)
 	app_write_REG_MOTOR2_QUICK_NOMINAL_SPEED(&app_regs.REG_MOTOR2_QUICK_NOMINAL_SPEED);
 	app_write_REG_MOTOR1_QUICK_START_SPEED(&app_regs.REG_MOTOR1_QUICK_START_SPEED);
 	app_write_REG_MOTOR2_QUICK_START_SPEED(&app_regs.REG_MOTOR2_QUICK_START_SPEED);
-	app_write_REG_MOTOR1_QUICK_DISTANCE(&app_regs.REG_MOTOR2_QUICK_START_SPEED);
-	app_write_REG_MOTOR2_QUICK_DISTANCE(&app_regs.REG_MOTOR2_QUICK_START_SPEED);
+	app_write_REG_MOTOR1_QUICK_ACCELERATION(&app_regs.REG_MOTOR1_QUICK_ACCELERATION);
+	app_write_REG_MOTOR2_QUICK_ACCELERATION(&app_regs.REG_MOTOR2_QUICK_ACCELERATION);
+	app_write_REG_MOTOR1_QUICK_DISTANCE(&app_regs.REG_MOTOR1_QUICK_DISTANCE);
+	app_write_REG_MOTOR2_QUICK_DISTANCE(&app_regs.REG_MOTOR2_QUICK_DISTANCE);
+
+	/* Travel limits live in the motion engine; load them from the registers */
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++) refresh_motor_limits(i);
 }

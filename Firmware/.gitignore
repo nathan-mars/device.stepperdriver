@@ -7,3 +7,6 @@ obj
 Debug
 packages
 *.componentinfo.xml
+# Command-line build output
+build
+__pycache__/

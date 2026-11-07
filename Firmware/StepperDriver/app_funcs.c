@@ -5,8 +5,10 @@
 #include "i2c.h"
 #include "stepper_control.h"
 #include "quick_movement.h"
+#include "homing.h"
+#include <avr/pgmspace.h>
 
-#define PERIOD_LIMIT 100
+#define PERIOD_LIMIT 10      /* us between pulses; 100k pulses/s */
 
 /************************************************************************/
 /* Create pointers to functions                                         */
@@ -77,15 +79,16 @@ uint8_t calculate_max_current_configuration_data (uint8_t *cfg_2_and_3, float rm
 /* Globals                                                              */
 /************************************************************************/
 extern int32_t user_requested_steps[];
-
-extern TC0_t* motor_peripherals_timer[];
+extern bool absolute_pending[];
+extern int32_t absolute_target[];
 
 /************************************************************************/
 /* Registers                                                            */
 /************************************************************************/
 
 
-void (*app_func_rd_pointer[])(void) = {
+/* Dispatch tables live in flash: only app.c reads them (via pgm_read_word). */
+void (* const app_func_rd_pointer[])(void) PROGMEM = {
 	&app_read_REG_ENABLE_MOTORS,
 	&app_read_REG_DISABLE_MOTORS,
 	&app_read_REG_ENABLE_ENCODERS,
@@ -194,10 +197,21 @@ void (*app_func_rd_pointer[])(void) = {
 	&app_read_REG_MOTOR1_QUICK_ACCELERATION,
 	&app_read_REG_MOTOR2_QUICK_ACCELERATION,
 	&app_read_REG_MOTOR1_QUICK_DISTANCE,
-	&app_read_REG_MOTOR2_QUICK_DISTANCE
+	&app_read_REG_MOTOR2_QUICK_DISTANCE,
+	&app_read_REG_MOTOR0_ACCELERATION,
+	&app_read_REG_MOTOR1_ACCELERATION,
+	&app_read_REG_MOTOR2_ACCELERATION,
+	&app_read_REG_MOTOR3_ACCELERATION,
+	&app_read_REG_HOME_MOTORS,
+	&app_read_REG_HOMING_STATE,
+	&app_read_REG_HOMING_CONFIG,
+	&app_read_REG_HOMING_STEP_INTERVAL,
+	&app_read_REG_HOMING_SLOW_STEP_INTERVAL,
+	&app_read_REG_HOMING_SEARCH_DISTANCE,
+	&app_read_REG_HOMING_BACKOFF
 };
 
-bool (*app_func_wr_pointer[])(void*) = {
+bool (* const app_func_wr_pointer[])(void*) PROGMEM = {
 	&app_write_REG_ENABLE_MOTORS,
 	&app_write_REG_DISABLE_MOTORS,
 	&app_write_REG_ENABLE_ENCODERS,
@@ -306,7 +320,18 @@ bool (*app_func_wr_pointer[])(void*) = {
 	&app_write_REG_MOTOR1_QUICK_ACCELERATION,
 	&app_write_REG_MOTOR2_QUICK_ACCELERATION,
 	&app_write_REG_MOTOR1_QUICK_DISTANCE,
-	&app_write_REG_MOTOR2_QUICK_DISTANCE
+	&app_write_REG_MOTOR2_QUICK_DISTANCE,
+	&app_write_REG_MOTOR0_ACCELERATION,
+	&app_write_REG_MOTOR1_ACCELERATION,
+	&app_write_REG_MOTOR2_ACCELERATION,
+	&app_write_REG_MOTOR3_ACCELERATION,
+	&app_write_REG_HOME_MOTORS,
+	&app_write_REG_HOMING_STATE,
+	&app_write_REG_HOMING_CONFIG,
+	&app_write_REG_HOMING_STEP_INTERVAL,
+	&app_write_REG_HOMING_SLOW_STEP_INTERVAL,
+	&app_write_REG_HOMING_SEARCH_DISTANCE,
+	&app_write_REG_HOMING_BACKOFF
 };
 
 
@@ -362,6 +387,8 @@ void app_read_REG_DISABLE_MOTORS(void)
 bool app_write_REG_DISABLE_MOTORS(void *a)
 {
 	uint8_t reg = *((uint8_t*)a);
+	
+	homing_lost(reg & 0x0F);   /* the motor can move freely without holding torque */
 	
 	if (reg & B_MOTOR0)
 	{
@@ -495,6 +522,9 @@ bool app_write_REG_DISABLE_INPUTS(void *a)
 {
 	uint8_t reg = *((uint8_t*)a);
 	
+	/* A homing axis would search its full distance without its endstop interrupt */
+	if (reg & homing_input_mask()) return false;
+	
 	if (reg & B_INPUT0)
 	{
 		io_pin2in(&PORTK, 5, PULL_IO_UP, SENSE_IO_NO_INT_USED);
@@ -503,7 +533,7 @@ bool app_write_REG_DISABLE_INPUTS(void *a)
 	
 	if (reg & B_INPUT1)
 	{
-		io_set_int(&PORTK, INT_LEVEL_OFF, 0, (1<<5), false);
+		io_pin2in(&PORTQ, 2, PULL_IO_UP, SENSE_IO_NO_INT_USED);
 		io_set_int(&PORTQ, INT_LEVEL_OFF, 0, (1<<2), false);
 	}
 	
@@ -845,13 +875,11 @@ bool app_write_REG_MOTOR0_NOMINAL_STEP_INTERVAL(void *a)
 	uint16_t reg = *((uint16_t*)a);
 	
 	if (reg < PERIOD_LIMIT) return false;
-	if (reg > 20000) return false;
+	if (reg > 16000) return false;
 	
-	if (TCC0.CTRLA) return false;
-
-	if (update_nominal_pulse_interval(reg, 0) == false) return false;
 
 	app_regs.REG_MOTOR0_NOMINAL_STEP_INTERVAL = reg;
+	refresh_motor_profile(0);
 	return true;
 }
 
@@ -865,13 +893,11 @@ bool app_write_REG_MOTOR1_NOMINAL_STEP_INTERVAL(void *a)
 	uint16_t reg = *((uint16_t*)a);
 	
 	if (reg < PERIOD_LIMIT) return false;
-	if (reg > 20000) return false;
+	if (reg > 16000) return false;
 	
-	if (TCC0.CTRLA) return false;
-
-	if (update_nominal_pulse_interval(reg, 1) == false) return false;
 
 	app_regs.REG_MOTOR1_NOMINAL_STEP_INTERVAL = reg;
+	refresh_motor_profile(1);
 	return true;
 }
 
@@ -885,13 +911,11 @@ bool app_write_REG_MOTOR2_NOMINAL_STEP_INTERVAL(void *a)
 	uint16_t reg = *((uint16_t*)a);
 	
 	if (reg < PERIOD_LIMIT) return false;
-	if (reg > 20000) return false;
+	if (reg > 16000) return false;
 	
-	if (TCC0.CTRLA) return false;
-
-	if (update_nominal_pulse_interval(reg, 2) == false) return false;
 
 	app_regs.REG_MOTOR2_NOMINAL_STEP_INTERVAL = reg;
+	refresh_motor_profile(2);
 	return true;
 }
 
@@ -905,13 +929,11 @@ bool app_write_REG_MOTOR3_NOMINAL_STEP_INTERVAL(void *a)
 	uint16_t reg = *((uint16_t*)a);
 	
 	if (reg < PERIOD_LIMIT) return false;
-	if (reg > 20000) return false;
+	if (reg > 16000) return false;
 	
-	if (TCC0.CTRLA) return false;
-
-	if (update_nominal_pulse_interval(reg, 3) == false) return false;
 
 	app_regs.REG_MOTOR3_NOMINAL_STEP_INTERVAL = reg;
+	refresh_motor_profile(3);
 	return true;
 }
 
@@ -925,13 +947,11 @@ bool app_write_REG_MOTOR0_MAXIMUM_STEP_INTERVAL(void *a)
 	uint16_t reg = *((uint16_t*)a);
 	
 	if (reg < PERIOD_LIMIT) return false;
-	if (reg > 20000) return false;
+	if (reg > 16000) return false;
 	
-	if (TCC0.CTRLA) return false;
 	
-	if (update_initial_pulse_interval(reg, 0) == false) return false;
-
 	app_regs.REG_MOTOR0_MAXIMUM_STEP_INTERVAL = reg;
+	refresh_motor_profile(0);
 	return true;
 }
 
@@ -945,13 +965,11 @@ bool app_write_REG_MOTOR1_MAXIMUM_STEP_INTERVAL(void *a)
 	uint16_t reg = *((uint16_t*)a);
 	
 	if (reg < PERIOD_LIMIT) return false;
-	if (reg > 20000) return false;
+	if (reg > 16000) return false;
 	
-	if (TCC0.CTRLA) return false;
 	
-	if (update_initial_pulse_interval(reg, 1) == false) return false;
-
 	app_regs.REG_MOTOR1_MAXIMUM_STEP_INTERVAL = reg;
+	refresh_motor_profile(1);
 	return true;
 }
 
@@ -965,13 +983,11 @@ bool app_write_REG_MOTOR2_MAXIMUM_STEP_INTERVAL(void *a)
 	uint16_t reg = *((uint16_t*)a);
 	
 	if (reg < PERIOD_LIMIT) return false;
-	if (reg > 20000) return false;
+	if (reg > 16000) return false;
 	
-	if (TCC0.CTRLA) return false;
-	
-	if (update_initial_pulse_interval(reg, 2) == false) return false;
 	
 	app_regs.REG_MOTOR2_MAXIMUM_STEP_INTERVAL = reg;
+	refresh_motor_profile(2);
 	return true;
 }
 
@@ -985,13 +1001,11 @@ bool app_write_REG_MOTOR3_MAXIMUM_STEP_INTERVAL(void *a)
 	uint16_t reg = *((uint16_t*)a);
 	
 	if (reg < PERIOD_LIMIT) return false;
-	if (reg > 20000) return false;
+	if (reg > 16000) return false;
 	
-	if (TCC0.CTRLA) return false;
-	
-	if (update_initial_pulse_interval(reg, 3) == false) return false;
 	
 	app_regs.REG_MOTOR3_MAXIMUM_STEP_INTERVAL = reg;
+	refresh_motor_profile(3);
 	return true;
 }
 
@@ -1007,11 +1021,11 @@ bool app_write_REG_MOTOR0_STEP_ACCELERATION_INTERVAL(void *a)
 	if (reg < 2) return false;
 	if (reg > 2000) return false;
 	
-	if (TCC0.CTRLA) return false;
 	
-	if (update_pulse_step_interval(reg, 0) == false) return false;
-
+	/* Deprecated register: convert to the equivalent constant acceleration */
 	app_regs.REG_MOTOR0_STEP_ACCELERATION_INTERVAL = reg;
+	app_regs.REG_MOTOR0_ACCELERATION = motion_legacy_accel(app_regs.REG_MOTOR0_NOMINAL_STEP_INTERVAL, app_regs.REG_MOTOR0_MAXIMUM_STEP_INTERVAL, reg);
+	refresh_motor_profile(0);
 	return true;
 }
 
@@ -1027,11 +1041,11 @@ bool app_write_REG_MOTOR1_STEP_ACCELERATION_INTERVAL(void *a)
 	if (reg < 2) return false;
 	if (reg > 2000) return false;
 	
-	if (TCC0.CTRLA) return false;
 	
-	if (update_pulse_step_interval(reg, 1) == false) return false;
-
+	/* Deprecated register: convert to the equivalent constant acceleration */
 	app_regs.REG_MOTOR1_STEP_ACCELERATION_INTERVAL = reg;
+	app_regs.REG_MOTOR1_ACCELERATION = motion_legacy_accel(app_regs.REG_MOTOR1_NOMINAL_STEP_INTERVAL, app_regs.REG_MOTOR1_MAXIMUM_STEP_INTERVAL, reg);
+	refresh_motor_profile(1);
 	return true;
 }
 
@@ -1047,11 +1061,11 @@ bool app_write_REG_MOTOR2_STEP_ACCELERATION_INTERVAL(void *a)
 	if (reg < 2) return false;
 	if (reg > 2000) return false;
 	
-	if (TCC0.CTRLA) return false;
 	
-	if (update_pulse_step_interval(reg, 2) == false) return false;
-
+	/* Deprecated register: convert to the equivalent constant acceleration */
 	app_regs.REG_MOTOR2_STEP_ACCELERATION_INTERVAL = reg;
+	app_regs.REG_MOTOR2_ACCELERATION = motion_legacy_accel(app_regs.REG_MOTOR2_NOMINAL_STEP_INTERVAL, app_regs.REG_MOTOR2_MAXIMUM_STEP_INTERVAL, reg);
+	refresh_motor_profile(2);
 	return true;
 }
 
@@ -1067,11 +1081,11 @@ bool app_write_REG_MOTOR3_STEP_ACCELERATION_INTERVAL(void *a)
 	if (reg < 2) return false;
 	if (reg > 2000) return false;
 	
-	if (TCC0.CTRLA) return false;
 	
-	if (update_pulse_step_interval(reg, 3) == false) return false;
-
+	/* Deprecated register: convert to the equivalent constant acceleration */
 	app_regs.REG_MOTOR3_STEP_ACCELERATION_INTERVAL = reg;
+	app_regs.REG_MOTOR3_ACCELERATION = motion_legacy_accel(app_regs.REG_MOTOR3_NOMINAL_STEP_INTERVAL, app_regs.REG_MOTOR3_MAXIMUM_STEP_INTERVAL, reg);
+	refresh_motor_profile(3);
 	return true;
 }
 
@@ -1194,11 +1208,11 @@ bool app_write_REG_ACCUMULATED_STEPS_UPDATE_RATE(void *a)
 void app_read_REG_MOTORS_STOPPED(void)
 {
 	app_regs.REG_MOTORS_STOPPED = 0;
-		
-	if (motor_peripherals_timer[0]->CTRLA == 0) app_regs.REG_MOTORS_STOPPED |= B_MOTOR0;
-	if (motor_peripherals_timer[1]->CTRLA == 0) app_regs.REG_MOTORS_STOPPED |= B_MOTOR1;
-	if (motor_peripherals_timer[2]->CTRLA == 0) app_regs.REG_MOTORS_STOPPED |= B_MOTOR2;
-	if (motor_peripherals_timer[3]->CTRLA == 0) app_regs.REG_MOTORS_STOPPED |= B_MOTOR3;
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+	{
+		if (!motion_is_running(i)) app_regs.REG_MOTORS_STOPPED |= (1 << i);
+	}
 }
 
 bool app_write_REG_MOTORS_STOPPED(void *a)
@@ -1315,11 +1329,13 @@ bool app_write_REG_MOTORS_STEPS(void *a)
 	if ((reg[1] != 0) && read_DRIVE_ENABLE_M1) return false;
 	if ((reg[2] != 0) && read_DRIVE_ENABLE_M2) return false;
 	if ((reg[3] != 0) && read_DRIVE_ENABLE_M3) return false;
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+		if (reg[i] != 0 && homing_is_active(i)) return false;
 	
-	if ((reg[0] != 0) && (is_timer_ready(0) == false)) return false;
-	if ((reg[1] != 0) && (is_timer_ready(1) == false)) return false;
-	if ((reg[2] != 0) && (is_timer_ready(2) == false)) return false;
-	if ((reg[3] != 0) && (is_timer_ready(3) == false)) return false;
+	if ((reg[0] != 0) && !motion_admit(0)) return false;
+	if ((reg[1] != 0) && !motion_admit(1)) return false;
+	if ((reg[2] != 0) && !motion_admit(2)) return false;
+	if ((reg[3] != 0) && !motion_admit(3)) return false;
 	
 	if (reg[0] != 0) app_write_REG_MOTOR0_STEPS(reg+0);
 	if (reg[1] != 0) app_write_REG_MOTOR1_STEPS(reg+1);
@@ -1342,6 +1358,8 @@ bool app_write_REG_MOTOR0_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
 
+	if (homing_is_active(0)) return false;   /* homing owns the motor; StopMotors cancels it */
+
 	if (reg != 0)
 	{
 		if (read_DRIVE_ENABLE_M0)
@@ -1349,9 +1367,9 @@ bool app_write_REG_MOTOR0_STEPS(void *a)
 			return false;
 		}
 	
-		if (is_timer_ready(0) == false)
+		if (!motion_admit(0))
 		{
-			return false;
+			return false;   /* would exceed the CPU budget for pulse generation */
 		}
 	}
 	
@@ -1370,6 +1388,8 @@ bool app_write_REG_MOTOR1_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
 
+	if (homing_is_active(1)) return false;   /* homing owns the motor; StopMotors cancels it */
+
 	if (reg != 0)
 	{
 		if (read_DRIVE_ENABLE_M1)
@@ -1377,9 +1397,9 @@ bool app_write_REG_MOTOR1_STEPS(void *a)
 			return false;
 		}
 	
-		if (is_timer_ready(1) == false)
+		if (!motion_admit(1))
 		{
-			return false;
+			return false;   /* would exceed the CPU budget for pulse generation */
 		}
 	}
 	
@@ -1398,6 +1418,8 @@ bool app_write_REG_MOTOR2_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
 
+	if (homing_is_active(2)) return false;   /* homing owns the motor; StopMotors cancels it */
+
 	if (reg != 0)
 	{
 		if (read_DRIVE_ENABLE_M2)
@@ -1405,9 +1427,9 @@ bool app_write_REG_MOTOR2_STEPS(void *a)
 			return false;
 		}
 		
-		if (is_timer_ready(2) == false)
+		if (!motion_admit(2))
 		{
-			return false;
+			return false;   /* would exceed the CPU budget for pulse generation */
 		}
 	}
 	
@@ -1426,6 +1448,8 @@ bool app_write_REG_MOTOR3_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
 
+	if (homing_is_active(3)) return false;   /* homing owns the motor; StopMotors cancels it */
+
 	if (reg != 0)
 	{
 		if (read_DRIVE_ENABLE_M3)
@@ -1433,9 +1457,9 @@ bool app_write_REG_MOTOR3_STEPS(void *a)
 			return false;
 		}
 		
-		if (is_timer_ready(3) == false)
+		if (!motion_admit(3))
 		{
-			return false;
+			return false;   /* would exceed the CPU budget for pulse generation */
 		}
 	}
 	
@@ -1458,6 +1482,8 @@ bool app_write_REG_MOTORS_ABSOLUTE_STEPS(void *a)
 	if ((reg[1] != app_regs.REG_ACCUMULATED_STEPS[1]) && read_DRIVE_ENABLE_M1) return false;
 	if ((reg[2] != app_regs.REG_ACCUMULATED_STEPS[2]) && read_DRIVE_ENABLE_M2) return false;
 	if ((reg[3] != app_regs.REG_ACCUMULATED_STEPS[3]) && read_DRIVE_ENABLE_M3) return false;
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+		if (reg[i] != app_regs.REG_ACCUMULATED_STEPS[i] && homing_is_active(i)) return false;
 	
 	if (reg[0] != app_regs.REG_ACCUMULATED_STEPS[0]) app_write_REG_MOTOR0_ABSOLUTE_STEPS(reg+0);
 	if (reg[1] != app_regs.REG_ACCUMULATED_STEPS[1]) app_write_REG_MOTOR1_ABSOLUTE_STEPS(reg+1);
@@ -1479,19 +1505,24 @@ void app_read_REG_MOTOR0_ABSOLUTE_STEPS(void) {}
 bool app_write_REG_MOTOR0_ABSOLUTE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
-	
-	/* Only executes the commands if the motor is stopped */
-	if_moving_stop_rotation(0);
 
+	if (homing_is_active(0)) return false;   /* homing owns the motor; StopMotors cancels it */
+	
 	if (reg != app_regs.REG_ACCUMULATED_STEPS[0])
 	{
 		if (read_DRIVE_ENABLE_M0)
 		{
 			return false;
 		}
+		if (!motion_admit(0))
+		{
+			return false;
+		}
 	}	
 	
-	user_requested_steps[0] += reg - app_regs.REG_ACCUMULATED_STEPS[0];
+	/* A running move stops first; the 1 ms callback then issues the exact delta */
+	absolute_target[0] = reg;
+	absolute_pending[0] = true;
 
 	app_regs.REG_MOTOR0_ABSOLUTE_STEPS = reg;
 	return true;
@@ -1505,19 +1536,24 @@ void app_read_REG_MOTOR1_ABSOLUTE_STEPS(void) {}
 bool app_write_REG_MOTOR1_ABSOLUTE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
-	
-	/* Only executes the commands if the motor is stopped */
-	if_moving_stop_rotation(1);
 
+	if (homing_is_active(1)) return false;   /* homing owns the motor; StopMotors cancels it */
+	
 	if (reg != app_regs.REG_ACCUMULATED_STEPS[1])
 	{
 		if (read_DRIVE_ENABLE_M1)
 		{
 			return false;
 		}
+		if (!motion_admit(1))
+		{
+			return false;
+		}
 	}
 	
-	user_requested_steps[1] += reg - app_regs.REG_ACCUMULATED_STEPS[1];
+	/* A running move stops first; the 1 ms callback then issues the exact delta */
+	absolute_target[1] = reg;
+	absolute_pending[1] = true;
 
 	app_regs.REG_MOTOR1_ABSOLUTE_STEPS = reg;
 	return true;
@@ -1531,19 +1567,24 @@ void app_read_REG_MOTOR2_ABSOLUTE_STEPS(void) {}
 bool app_write_REG_MOTOR2_ABSOLUTE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
-	
-	/* Only executes the commands if the motor is stopped */
-	if_moving_stop_rotation(2);
 
+	if (homing_is_active(2)) return false;   /* homing owns the motor; StopMotors cancels it */
+	
 	if (reg != app_regs.REG_ACCUMULATED_STEPS[2])
 	{
 		if (read_DRIVE_ENABLE_M2)
 		{
 			return false;
 		}
+		if (!motion_admit(2))
+		{
+			return false;
+		}
 	}
 	
-	user_requested_steps[2] += reg - app_regs.REG_ACCUMULATED_STEPS[2];
+	/* A running move stops first; the 1 ms callback then issues the exact delta */
+	absolute_target[2] = reg;
+	absolute_pending[2] = true;
 
 	app_regs.REG_MOTOR2_ABSOLUTE_STEPS = reg;
 	return true;
@@ -1557,19 +1598,24 @@ void app_read_REG_MOTOR3_ABSOLUTE_STEPS(void) {}
 bool app_write_REG_MOTOR3_ABSOLUTE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
-	
-	/* Only executes the commands if the motor is stopped */
-	if_moving_stop_rotation(3);
 
+	if (homing_is_active(3)) return false;   /* homing owns the motor; StopMotors cancels it */
+	
 	if (reg != app_regs.REG_ACCUMULATED_STEPS[3])
 	{
 		if (read_DRIVE_ENABLE_M3)
 		{
 			return false;
 		}
+		if (!motion_admit(3))
+		{
+			return false;
+		}
 	}
 	
-	user_requested_steps[3] += reg - app_regs.REG_ACCUMULATED_STEPS[3];
+	/* A running move stops first; the 1 ms callback then issues the exact delta */
+	absolute_target[3] = reg;
+	absolute_pending[3] = true;
 
 	app_regs.REG_MOTOR3_ABSOLUTE_STEPS = reg;
 	return true;
@@ -1584,10 +1630,10 @@ bool app_write_REG_ACCUMULATED_STEPS(void *a)
 {
 	int32_t *reg = ((int32_t*)a);	
 
-	app_regs.REG_ACCUMULATED_STEPS[0] = reg[0];
-	app_regs.REG_ACCUMULATED_STEPS[1] = reg[1];
-	app_regs.REG_ACCUMULATED_STEPS[2] = reg[2];
-	app_regs.REG_ACCUMULATED_STEPS[3] = reg[3];
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+	{
+		motion_set_position(i, reg[i]);
+	}
 	return true;
 }
 
@@ -1604,7 +1650,7 @@ bool app_write_REG_MOTOR0_ACCUMULATED_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
 	
-	app_regs.REG_ACCUMULATED_STEPS[0] = reg;
+	motion_set_position(0, reg);
 	app_regs.REG_MOTOR0_ACCUMULATED_STEPS = reg;
 	return true;
 }
@@ -1622,7 +1668,7 @@ bool app_write_REG_MOTOR1_ACCUMULATED_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
 	
-	app_regs.REG_ACCUMULATED_STEPS[1] = reg;
+	motion_set_position(1, reg);
 	app_regs.REG_MOTOR1_ACCUMULATED_STEPS = reg;
 	return true;
 }
@@ -1641,7 +1687,7 @@ bool app_write_REG_MOTOR2_ACCUMULATED_STEPS(void *a)
 	int32_t reg = *((int32_t*)a);
 
 
-	app_regs.REG_ACCUMULATED_STEPS[2] = reg;
+	motion_set_position(2, reg);
 	app_regs.REG_MOTOR2_ACCUMULATED_STEPS = reg;
 	return true;
 }
@@ -1659,7 +1705,7 @@ bool app_write_REG_MOTOR3_ACCUMULATED_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
 
-	app_regs.REG_ACCUMULATED_STEPS[3] = reg;
+	motion_set_position(3, reg);
 	app_regs.REG_MOTOR3_ACCUMULATED_STEPS = reg;
 	return true;
 }
@@ -1677,6 +1723,7 @@ bool app_write_REG_MOTORS_MAX_STEPS_INTEGRATION(void *a)
 	app_regs.REG_MOTOR1_MAX_STEPS_INTEGRATION = reg[1];
 	app_regs.REG_MOTOR2_MAX_STEPS_INTEGRATION = reg[2];
 	app_regs.REG_MOTOR3_MAX_STEPS_INTEGRATION = reg[3];
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++) refresh_motor_limits(i);
 
 	app_regs.REG_MOTORS_MAX_STEPS_INTEGRATION[0] = reg[0];
 	app_regs.REG_MOTORS_MAX_STEPS_INTEGRATION[1] = reg[1];
@@ -1695,6 +1742,7 @@ bool app_write_REG_MOTOR0_MAX_STEPS_INTEGRATION(void *a)
 	int32_t reg = *((int32_t*)a);
 
 	app_regs.REG_MOTOR0_MAX_STEPS_INTEGRATION = reg;
+	refresh_motor_limits(0);
 	return true;
 }
 
@@ -1708,6 +1756,7 @@ bool app_write_REG_MOTOR1_MAX_STEPS_INTEGRATION(void *a)
 	int32_t reg = *((int32_t*)a);
 
 	app_regs.REG_MOTOR1_MAX_STEPS_INTEGRATION = reg;
+	refresh_motor_limits(1);
 	return true;
 }
 
@@ -1721,6 +1770,7 @@ bool app_write_REG_MOTOR2_MAX_STEPS_INTEGRATION(void *a)
 	int32_t reg = *((int32_t*)a);
 
 	app_regs.REG_MOTOR2_MAX_STEPS_INTEGRATION = reg;
+	refresh_motor_limits(2);
 	return true;
 }
 
@@ -1734,6 +1784,7 @@ bool app_write_REG_MOTOR3_MAX_STEPS_INTEGRATION(void *a)
 	int32_t reg = *((int32_t*)a);
 
 	app_regs.REG_MOTOR3_MAX_STEPS_INTEGRATION = reg;
+	refresh_motor_limits(3);
 	return true;
 }
 
@@ -1750,6 +1801,7 @@ bool app_write_REG_MOTORS_MIN_STEPS_INTEGRATION(void *a)
 	app_regs.REG_MOTOR1_MIN_STEPS_INTEGRATION = reg[1];
 	app_regs.REG_MOTOR2_MIN_STEPS_INTEGRATION = reg[2];
 	app_regs.REG_MOTOR3_MIN_STEPS_INTEGRATION = reg[3];
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++) refresh_motor_limits(i);
 
 	app_regs.REG_MOTORS_MIN_STEPS_INTEGRATION[0] = reg[0];
 	app_regs.REG_MOTORS_MIN_STEPS_INTEGRATION[1] = reg[1];
@@ -1768,6 +1820,7 @@ bool app_write_REG_MOTOR0_MIN_STEPS_INTEGRATION(void *a)
 	int32_t reg = *((int32_t*)a);
 
 	app_regs.REG_MOTOR0_MIN_STEPS_INTEGRATION = reg;
+	refresh_motor_limits(0);
 	return true;
 }
 
@@ -1781,6 +1834,7 @@ bool app_write_REG_MOTOR1_MIN_STEPS_INTEGRATION(void *a)
 	int32_t reg = *((int32_t*)a);
 
 	app_regs.REG_MOTOR1_MIN_STEPS_INTEGRATION = reg;
+	refresh_motor_limits(1);
 	return true;
 }
 
@@ -1794,6 +1848,7 @@ bool app_write_REG_MOTOR2_MIN_STEPS_INTEGRATION(void *a)
 	int32_t reg = *((int32_t*)a);
 
 	app_regs.REG_MOTOR2_MIN_STEPS_INTEGRATION = reg;
+	refresh_motor_limits(2);
 	return true;
 }
 
@@ -1807,6 +1862,7 @@ bool app_write_REG_MOTOR3_MIN_STEPS_INTEGRATION(void *a)
 	int32_t reg = *((int32_t*)a);
 
 	app_regs.REG_MOTOR3_MIN_STEPS_INTEGRATION = reg;
+	refresh_motor_limits(3);
 	return true;
 }
 
@@ -1823,6 +1879,8 @@ bool app_write_REG_MOTORS_IMMEDIATE_STEPS(void *a)
 	if (reg[1]) if (read_DRIVE_ENABLE_M1) return false;
 	if (reg[2]) if (read_DRIVE_ENABLE_M2) return false;
 	if (reg[3]) if (read_DRIVE_ENABLE_M3) return false;
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+		if (reg[i] != 0 && homing_is_active(i)) return false;
 	
 	app_write_REG_MOTOR0_IMMEDIATE_STEPS(reg+0);
 	app_write_REG_MOTOR1_IMMEDIATE_STEPS(reg+1);
@@ -1844,53 +1902,24 @@ void app_read_REG_MOTOR0_IMMEDIATE_STEPS(void) {}
 bool app_write_REG_MOTOR0_IMMEDIATE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
-	
+
+	if (homing_is_active(0)) return false;   /* homing owns the motor; StopMotors cancels it */
+
+	/* Constant-speed rotation: |reg| is the pulse interval in us, sign is direction, 0 stops */
 	if (reg) if (read_DRIVE_ENABLE_M0) return false;
-	
+
 	if (reg > -PERIOD_LIMIT && reg < PERIOD_LIMIT)
 	{
 		reg = 0;
 	}
-	
+
 	if (reg == 0)
 	{
-		timer_type0_stop(&TCC0);
-		clr_LED_M0;
-	}	
-	else if (TCC0_CTRLA == 0)
-	{
-		if (reg > 0)
-			set_DIR_M0;
-		else
-			clr_DIR_M0;
-			
-		if (reg < 0)
-		{
-			reg = -reg;
-		}
-			
-		timer_type0_pwm(&TCC0, TIMER_PRESCALER_DIV64, reg >> 1, 3, INT_LEVEL_LOW, INT_LEVEL_OFF);
-		
-		if (core_bool_is_visual_enabled())
-			set_LED_M0;
+		motion_jog_stop(0);
 	}
-	else
+	else if (!motion_jog(0, 1.0e6f / (float)(reg < 0 ? -reg : reg), reg > 0))
 	{
-		if (TCC0_INTCTRLB |= 0)
-		{
-			/* If running in normal mode, disable CCA interrupt */
-			TCC0_INTCTRLB = 0;
-		}
-		
-		if (reg > 0)
-			set_DIR_M0;
-		else
-			clr_DIR_M0;
-			
-		if (reg < 0) reg = -reg;
-		
-		TCC0_PER = (reg >> 1) - 1;
-		TCC0_CCA = 3;
+		return false;   /* would exceed the CPU budget for pulse generation */
 	}
 
 	app_regs.REG_MOTOR0_IMMEDIATE_STEPS = *((int32_t*)a);
@@ -1905,53 +1934,24 @@ void app_read_REG_MOTOR1_IMMEDIATE_STEPS(void) {}
 bool app_write_REG_MOTOR1_IMMEDIATE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
-	
+
+	if (homing_is_active(1)) return false;   /* homing owns the motor; StopMotors cancels it */
+
+	/* Constant-speed rotation: |reg| is the pulse interval in us, sign is direction, 0 stops */
 	if (reg) if (read_DRIVE_ENABLE_M1) return false;
-	
+
 	if (reg > -PERIOD_LIMIT && reg < PERIOD_LIMIT)
 	{
 		reg = 0;
 	}
-	
+
 	if (reg == 0)
 	{
-		timer_type0_stop(&TCD0);
-		clr_LED_M1;
+		motion_jog_stop(1);
 	}
-	else if (TCD0_CTRLA == 0)
+	else if (!motion_jog(1, 1.0e6f / (float)(reg < 0 ? -reg : reg), reg > 0))
 	{
-		if (reg > 0)
-			set_DIR_M1;
-		else
-			clr_DIR_M1;
-		
-		if (reg < 0)
-		{
-			reg = -reg;
-		}
-		
-		timer_type0_pwm(&TCD0, TIMER_PRESCALER_DIV64, reg >> 1, 3, INT_LEVEL_LOW, INT_LEVEL_OFF);
-		
-		if (core_bool_is_visual_enabled())
-			set_LED_M1;
-	}
-	else
-	{
-		if (TCD0_INTCTRLB |= 0)
-		{
-			/* If running in normal mode, disable CCA interrupt */
-			TCC0_INTCTRLB = 0;
-		}
-		
-		if (reg > 0)
-			set_DIR_M1;
-		else
-			clr_DIR_M1;
-		
-		if (reg < 0) reg = -reg;
-		
-		TCD0_PER = (reg >> 1) - 1;
-		TCC0_CCA = 3;
+		return false;   /* would exceed the CPU budget for pulse generation */
 	}
 
 	app_regs.REG_MOTOR1_IMMEDIATE_STEPS = *((int32_t*)a);
@@ -1966,53 +1966,24 @@ void app_read_REG_MOTOR2_IMMEDIATE_STEPS(void) {}
 bool app_write_REG_MOTOR2_IMMEDIATE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
-	
+
+	if (homing_is_active(2)) return false;   /* homing owns the motor; StopMotors cancels it */
+
+	/* Constant-speed rotation: |reg| is the pulse interval in us, sign is direction, 0 stops */
 	if (reg) if (read_DRIVE_ENABLE_M2) return false;
-	
+
 	if (reg > -PERIOD_LIMIT && reg < PERIOD_LIMIT)
 	{
 		reg = 0;
 	}
-	
+
 	if (reg == 0)
 	{
-		timer_type0_stop(&TCE0);
-		clr_LED_M2;
+		motion_jog_stop(2);
 	}
-	else if (TCE0_CTRLA == 0)
+	else if (!motion_jog(2, 1.0e6f / (float)(reg < 0 ? -reg : reg), reg > 0))
 	{
-		if (reg > 0)
-			set_DIR_M2;
-		else
-			clr_DIR_M2;
-		
-		if (reg < 0)
-		{
-			reg = -reg;
-		}
-		
-		timer_type0_pwm(&TCE0, TIMER_PRESCALER_DIV64, reg >> 1, 3, INT_LEVEL_LOW, INT_LEVEL_OFF);
-		
-		if (core_bool_is_visual_enabled())
-			set_LED_M2;
-	}
-	else
-	{
-		if (TCE0_INTCTRLB |= 0)
-		{
-			/* If running in normal mode, disable CCA interrupt */
-			TCC0_INTCTRLB = 0;
-		}
-		
-		if (reg > 0)
-			set_DIR_M2;
-		else
-			clr_DIR_M2;
-		
-		if (reg < 0) reg = -reg;
-		
-		TCE0_PER = (reg >> 1) - 1;
-		TCC0_CCA = 3;
+		return false;   /* would exceed the CPU budget for pulse generation */
 	}
 
 	app_regs.REG_MOTOR2_IMMEDIATE_STEPS = *((int32_t*)a);
@@ -2027,53 +1998,24 @@ void app_read_REG_MOTOR3_IMMEDIATE_STEPS(void) {}
 bool app_write_REG_MOTOR3_IMMEDIATE_STEPS(void *a)
 {
 	int32_t reg = *((int32_t*)a);
-	
+
+	if (homing_is_active(3)) return false;   /* homing owns the motor; StopMotors cancels it */
+
+	/* Constant-speed rotation: |reg| is the pulse interval in us, sign is direction, 0 stops */
 	if (reg) if (read_DRIVE_ENABLE_M3) return false;
-	
+
 	if (reg > -PERIOD_LIMIT && reg < PERIOD_LIMIT)
 	{
 		reg = 0;
 	}
-	
+
 	if (reg == 0)
 	{
-		timer_type0_stop(&TCF0);
-		clr_LED_M3;
+		motion_jog_stop(3);
 	}
-	else if (TCF0_CTRLA == 0)
+	else if (!motion_jog(3, 1.0e6f / (float)(reg < 0 ? -reg : reg), reg > 0))
 	{
-		if (reg > 0)
-			set_DIR_M3;
-		else
-			clr_DIR_M3;
-		
-		if (reg < 0)
-		{
-			reg = -reg;
-		}
-		
-		timer_type0_pwm(&TCF0, TIMER_PRESCALER_DIV64, reg >> 1, 3, INT_LEVEL_LOW, INT_LEVEL_OFF);
-		
-		if (core_bool_is_visual_enabled())
-			set_LED_M3;
-	}
-	else
-	{
-		if (TCF0_INTCTRLB |= 0)
-		{
-			/* If running in normal mode, disable CCA interrupt */
-			TCC0_INTCTRLB = 0;
-		}
-		
-		if (reg > 0)
-			set_DIR_M3;
-		else
-			clr_DIR_M3;
-		
-		if (reg < 0) reg = -reg;
-		
-		TCF0_PER = (reg >> 1) - 1;
-		TCC0_CCA = 3;
+		return false;   /* would exceed the CPU budget for pulse generation */
 	}
 
 	app_regs.REG_MOTOR3_IMMEDIATE_STEPS = *((int32_t*)a);
@@ -2089,6 +2031,7 @@ bool app_write_REG_STOP_MOTORS_SUDENTLY(void *a)
 {
 	uint8_t reg = *((uint8_t*)a);
 	
+	homing_cancel(reg);
 	if (reg & B_MOTOR0) stop_rotation (0);
 	if (reg & B_MOTOR1) stop_rotation (1);
 	if (reg & B_MOTOR2) stop_rotation (2);
@@ -2473,32 +2416,26 @@ void app_read_REG_START_QUICK_MOVEMENT(void)
 bool app_write_REG_START_QUICK_MOVEMENT(void *a)
 {
 	uint8_t reg = *((uint8_t*)a);
-	
-	bool ok = true;
-	
+	int32_t pulses[2] = {0, 0};
+
+	/* Validate both motors before moving either */
+	if (reg & (B_MOTOR0 | B_MOTOR3)) return false;
+	if (reg & homing_active_mask()) return false;
 	if (reg & B_MOTOR1)
 	{
-		//ok = m1_quick_launch_movement(); // old way
-		ok = m1_recalc_internal_paramenters(); // new way
-		if (ok)
-			ok = m1_launch_quick_movement(); // new way
+		if (read_DRIVE_ENABLE_M1) return false;
+		if (!quick_movement_prepare(1, &pulses[0])) return false;
+		if (!motion_admit(1)) return false;
 	}
-	
-	if (ok)
+	if (reg & B_MOTOR2)
 	{
-		if (reg & B_MOTOR2)
-		{			
-			//ok = m2_quick_launch_movement(); // old way
-			ok = m2_recalc_internal_paramenters(); // new way
-			if (ok)
-			ok = m2_launch_quick_movement(); // new way
-		}
+		if (read_DRIVE_ENABLE_M2) return false;
+		if (!quick_movement_prepare(2, &pulses[1])) return false;
+		if (!motion_admit(2)) return false;
 	}
-	
-	if (!ok)
-	{
-		return false;
-	}
+
+	if (reg & B_MOTOR1) user_requested_steps[1] += pulses[0];
+	if (reg & B_MOTOR2) user_requested_steps[2] += pulses[1];
 
 	app_regs.REG_START_QUICK_MOVEMENT = reg;
 	return true;
@@ -2661,5 +2598,219 @@ bool app_write_REG_MOTOR2_QUICK_DISTANCE(void *a)
 	
 	//m1_recalc_internal_paramenters();
 	
+	return true;
+}
+
+
+/************************************************************************/
+/* REG_MOTOR0_ACCELERATION                                              */
+/************************************************************************/
+void app_read_REG_MOTOR0_ACCELERATION(void) {}
+bool app_write_REG_MOTOR0_ACCELERATION(void *a)
+{
+	uint32_t reg = *((uint32_t*)a);
+
+	if (reg == 0) return false;
+
+	app_regs.REG_MOTOR0_ACCELERATION = reg;
+	refresh_motor_profile(0);
+	return true;
+}
+
+
+/************************************************************************/
+/* REG_MOTOR1_ACCELERATION                                              */
+/************************************************************************/
+void app_read_REG_MOTOR1_ACCELERATION(void) {}
+bool app_write_REG_MOTOR1_ACCELERATION(void *a)
+{
+	uint32_t reg = *((uint32_t*)a);
+
+	if (reg == 0) return false;
+
+	app_regs.REG_MOTOR1_ACCELERATION = reg;
+	refresh_motor_profile(1);
+	return true;
+}
+
+
+/************************************************************************/
+/* REG_MOTOR2_ACCELERATION                                              */
+/************************************************************************/
+void app_read_REG_MOTOR2_ACCELERATION(void) {}
+bool app_write_REG_MOTOR2_ACCELERATION(void *a)
+{
+	uint32_t reg = *((uint32_t*)a);
+
+	if (reg == 0) return false;
+
+	app_regs.REG_MOTOR2_ACCELERATION = reg;
+	refresh_motor_profile(2);
+	return true;
+}
+
+
+/************************************************************************/
+/* REG_MOTOR3_ACCELERATION                                              */
+/************************************************************************/
+void app_read_REG_MOTOR3_ACCELERATION(void) {}
+bool app_write_REG_MOTOR3_ACCELERATION(void *a)
+{
+	uint32_t reg = *((uint32_t*)a);
+
+	if (reg == 0) return false;
+
+	app_regs.REG_MOTOR3_ACCELERATION = reg;
+	refresh_motor_profile(3);
+	return true;
+}
+
+
+
+
+/************************************************************************/
+/* Homing                                                               */
+/************************************************************************/
+static void enable_input_interrupt(uint8_t input)
+{
+	switch (input)
+	{
+		case 0: io_pin2in(&PORTK, 5, PULL_IO_UP, SENSE_IO_EDGES_BOTH); io_set_int(&PORTK, INT_LEVEL_LOW, 0, (1<<5), false); break;
+		case 1: io_pin2in(&PORTQ, 2, PULL_IO_UP, SENSE_IO_EDGES_BOTH); io_set_int(&PORTQ, INT_LEVEL_LOW, 0, (1<<2), false); break;
+		case 2: io_pin2in(&PORTC, 5, PULL_IO_UP, SENSE_IO_EDGES_BOTH); io_set_int(&PORTC, INT_LEVEL_LOW, 0, (1<<5), false); break;
+		default: io_pin2in(&PORTH, 7, PULL_IO_UP, SENSE_IO_EDGES_BOTH); io_set_int(&PORTH, INT_LEVEL_LOW, 0, (1<<7), false); break;
+	}
+}
+
+static void homing_params_of(uint8_t i, homing_params_t *p)
+{
+	p->config  = app_regs.REG_HOMING_CONFIG[i];
+	p->fast_us = app_regs.REG_HOMING_STEP_INTERVAL[i];
+	p->slow_us = app_regs.REG_HOMING_SLOW_STEP_INTERVAL[i];
+	p->search  = app_regs.REG_HOMING_SEARCH_DISTANCE[i];
+	p->backoff = app_regs.REG_HOMING_BACKOFF[i];
+}
+
+/************************************************************************/
+/* REG_HOME_MOTORS                                                      */
+/************************************************************************/
+void app_read_REG_HOME_MOTORS(void)
+{
+	app_regs.REG_HOME_MOTORS = homing_active_mask();
+}
+
+bool app_write_REG_HOME_MOTORS(void *a)
+{
+	uint8_t reg = *((uint8_t*)a);
+	homing_params_t p[MOTORS_QUANTITY];
+
+	if (reg & 0xF0) return false;
+
+	/* Axes already homing keep going; only the others start (all or none) */
+	uint8_t start = reg & (uint8_t)~homing_active_mask();
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+	{
+		homing_params_of(i, &p[i]);
+		if (!(start & (1 << i))) continue;
+		if (motor_driver_off(i)) return false;
+		if (p[i].search == 0) return false;   /* search distance not configured */
+	}
+	if (start && !homing_admit(start, p)) return false;
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+	{
+		if (!(start & (1 << i))) continue;
+		enable_input_interrupt(p[i].config & HOMING_CFG_INPUT_MASK);
+		homing_start(i, &p[i]);   /* stops a move in progress, then homes */
+	}
+
+	app_regs.REG_HOME_MOTORS = reg;
+	return true;
+}
+
+/************************************************************************/
+/* REG_HOMING_STATE                                                     */
+/************************************************************************/
+void app_read_REG_HOMING_STATE(void)
+{
+	app_regs.REG_HOMING_STATE = homing_state();
+}
+
+bool app_write_REG_HOMING_STATE(void *a) { return false; }
+
+/************************************************************************/
+/* REG_HOMING_CONFIG                                                    */
+/************************************************************************/
+void app_read_REG_HOMING_CONFIG(void) {}
+bool app_write_REG_HOMING_CONFIG(void *a)
+{
+	uint8_t *reg = ((uint8_t*)a);
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+		if (reg[i] & (uint8_t)~HOMING_CFG_VALID_BITS) return false;
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++) app_regs.REG_HOMING_CONFIG[i] = reg[i];
+	return true;
+}
+
+/************************************************************************/
+/* REG_HOMING_STEP_INTERVAL and REG_HOMING_SLOW_STEP_INTERVAL           */
+/************************************************************************/
+static bool valid_intervals(const uint16_t *reg)
+{
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+		if (reg[i] < PERIOD_LIMIT || reg[i] > 16000) return false;
+	return true;
+}
+
+void app_read_REG_HOMING_STEP_INTERVAL(void) {}
+bool app_write_REG_HOMING_STEP_INTERVAL(void *a)
+{
+	uint16_t *reg = ((uint16_t*)a);
+
+	if (!valid_intervals(reg)) return false;
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++) app_regs.REG_HOMING_STEP_INTERVAL[i] = reg[i];
+	return true;
+}
+
+void app_read_REG_HOMING_SLOW_STEP_INTERVAL(void) {}
+bool app_write_REG_HOMING_SLOW_STEP_INTERVAL(void *a)
+{
+	uint16_t *reg = ((uint16_t*)a);
+
+	if (!valid_intervals(reg)) return false;
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++) app_regs.REG_HOMING_SLOW_STEP_INTERVAL[i] = reg[i];
+	return true;
+}
+
+/************************************************************************/
+/* REG_HOMING_SEARCH_DISTANCE                                           */
+/************************************************************************/
+void app_read_REG_HOMING_SEARCH_DISTANCE(void) {}
+bool app_write_REG_HOMING_SEARCH_DISTANCE(void *a)
+{
+	uint32_t *reg = ((uint32_t*)a);
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+		if (reg[i] > 0x7FFFFFFFUL) return false;
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++) app_regs.REG_HOMING_SEARCH_DISTANCE[i] = reg[i];
+	return true;
+}
+
+/************************************************************************/
+/* REG_HOMING_BACKOFF                                                   */
+/************************************************************************/
+void app_read_REG_HOMING_BACKOFF(void) {}
+bool app_write_REG_HOMING_BACKOFF(void *a)
+{
+	uint16_t *reg = ((uint16_t*)a);
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++)
+		if (reg[i] == 0) return false;
+
+	for (uint8_t i = 0; i < MOTORS_QUANTITY; i++) app_regs.REG_HOMING_BACKOFF[i] = reg[i];
 	return true;
 }

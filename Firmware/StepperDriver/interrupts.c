@@ -5,6 +5,7 @@
 #include "hwbp_core.h"
 
 #include "stepper_control.h"
+#include "homing.h"
 
 /************************************************************************/
 /* Declare application registers                                        */
@@ -31,22 +32,30 @@ extern AppRegs app_regs;
 
 uint8_t inputs_previous_read = 0;
 
+/* InputNOpMode stops leave a homing motor alone: homing watches its own edges */
+static void stop_unless_homing(uint8_t motor)
+{
+	if (!homing_is_active(motor)) if_moving_stop_rotation(motor);
+}
+
 /************************************************************************/ 
 /* INPUT0                                                               */
 /************************************************************************/
 ISR(PORTK_INT0_vect, ISR_NAKED)
 {
 	uint8_t inputs_current_read = inputs_previous_read;
+	bool line_high = read_INPUT0 ? true : false;
 	
-	uint8_t motor_stopped_mask = 0;
+	/* Homing first: it stops its motor at the next pulse on the endstop edge */
+	homing_input_edge(0, line_high);
 	
-	if (read_INPUT0)
+	if (line_high)
 	{
 		inputs_current_read &= ~B_INPUT0;
 		
 		if (app_regs.REG_INPUT0_OPERATION_MODE & 0x20)	// Means it's configured to stop when falling
 		{
-			motor_stopped_mask = (if_moving_stop_rotation(app_regs.REG_INPUT0_OPERATION_MODE & 0x0F)) ? (app_regs.REG_INPUT0_OPERATION_MODE & 0x0F) : 0;
+			stop_unless_homing(app_regs.REG_INPUT0_OPERATION_MODE & 0x03);
 		}
 	}
 	else
@@ -55,7 +64,7 @@ ISR(PORTK_INT0_vect, ISR_NAKED)
 		
 		if (app_regs.REG_INPUT0_OPERATION_MODE & 0x10)	// Means it's configured to stop when rising
 		{
-			motor_stopped_mask = (if_moving_stop_rotation(app_regs.REG_INPUT0_OPERATION_MODE & 0x0F)) ? (app_regs.REG_INPUT0_OPERATION_MODE & 0x0F) : 0;
+			stop_unless_homing(app_regs.REG_INPUT0_OPERATION_MODE & 0x03);
 		}
 	}
 	
@@ -67,10 +76,7 @@ ISR(PORTK_INT0_vect, ISR_NAKED)
 		inputs_previous_read = inputs_current_read;
 	}
 	
-	if (motor_stopped_mask)
-	{
-		send_motors_stopped_event(motor_stopped_mask);
-	}
+	/* MotorStopped is sent by the 1 ms callback once the motor has stopped */
 	
 	reti();
 }
@@ -81,16 +87,18 @@ ISR(PORTK_INT0_vect, ISR_NAKED)
 ISR(PORTQ_INT0_vect, ISR_NAKED)
 {
 	uint8_t inputs_current_read = inputs_previous_read;
+	bool line_high = read_INPUT1 ? true : false;
 	
-	uint8_t motor_stopped_mask = 0;
+	/* Homing first: it stops its motor at the next pulse on the endstop edge */
+	homing_input_edge(1, line_high);
 	
-	if (read_INPUT1)
+	if (line_high)
 	{
 		inputs_current_read &= ~B_INPUT1;
 		
 		if (app_regs.REG_INPUT1_OPERATION_MODE & 0x20)	// Means it's configured to stop when falling
 		{
-			motor_stopped_mask = (if_moving_stop_rotation(app_regs.REG_INPUT1_OPERATION_MODE & 0x0F)) ? (app_regs.REG_INPUT1_OPERATION_MODE & 0x0F) : 0;
+			stop_unless_homing(app_regs.REG_INPUT1_OPERATION_MODE & 0x03);
 		}
 	}
 	else
@@ -99,7 +107,7 @@ ISR(PORTQ_INT0_vect, ISR_NAKED)
 		
 		if (app_regs.REG_INPUT1_OPERATION_MODE & 0x10)	// Means it's configured to stop when rising
 		{
-			motor_stopped_mask = (if_moving_stop_rotation(app_regs.REG_INPUT1_OPERATION_MODE & 0x0F)) ? (app_regs.REG_INPUT1_OPERATION_MODE & 0x0F) : 0;
+			stop_unless_homing(app_regs.REG_INPUT1_OPERATION_MODE & 0x03);
 		}
 	}
 	
@@ -111,10 +119,7 @@ ISR(PORTQ_INT0_vect, ISR_NAKED)
 		inputs_previous_read = inputs_current_read;
 	}
 	
-	if (motor_stopped_mask)
-	{
-		send_motors_stopped_event(motor_stopped_mask);
-	}
+	/* MotorStopped is sent by the 1 ms callback once the motor has stopped */
 	
 	reti();
 }
@@ -125,16 +130,18 @@ ISR(PORTQ_INT0_vect, ISR_NAKED)
 ISR(PORTC_INT0_vect, ISR_NAKED)
 {
 	uint8_t inputs_current_read = inputs_previous_read;
+	bool line_high = read_INPUT2 ? true : false;
 	
-	uint8_t motor_stopped_mask = 0;
+	/* Homing first: it stops its motor at the next pulse on the endstop edge */
+	homing_input_edge(2, line_high);
 	
-	if (read_INPUT2)
+	if (line_high)
 	{
 		inputs_current_read &= ~B_INPUT2;
 		
 		if (app_regs.REG_INPUT2_OPERATION_MODE & 0x20)	// Means it's configured to stop when falling
 		{
-			motor_stopped_mask = (if_moving_stop_rotation(app_regs.REG_INPUT2_OPERATION_MODE & 0x0F)) ? (app_regs.REG_INPUT2_OPERATION_MODE & 0x0F) : 0;
+			stop_unless_homing(app_regs.REG_INPUT2_OPERATION_MODE & 0x03);
 		}
 	}
 	else
@@ -143,7 +150,7 @@ ISR(PORTC_INT0_vect, ISR_NAKED)
 		
 		if (app_regs.REG_INPUT2_OPERATION_MODE & 0x10)	// Means it's configured to stop when rising
 		{
-			motor_stopped_mask = (if_moving_stop_rotation(app_regs.REG_INPUT2_OPERATION_MODE & 0x0F)) ? (app_regs.REG_INPUT2_OPERATION_MODE & 0x0F) : 0;
+			stop_unless_homing(app_regs.REG_INPUT2_OPERATION_MODE & 0x03);
 		}
 	}
 	
@@ -155,10 +162,7 @@ ISR(PORTC_INT0_vect, ISR_NAKED)
 		inputs_previous_read = inputs_current_read;
 	}
 	
-	if (motor_stopped_mask)
-	{
-		send_motors_stopped_event(motor_stopped_mask);
-	}
+	/* MotorStopped is sent by the 1 ms callback once the motor has stopped */
 	
 	reti();
 }
@@ -169,16 +173,18 @@ ISR(PORTC_INT0_vect, ISR_NAKED)
 ISR(PORTH_INT0_vect, ISR_NAKED)
 {
 	uint8_t inputs_current_read = inputs_previous_read;
+	bool line_high = read_INPUT3 ? true : false;
 	
-	uint8_t motor_stopped_mask = 0;
+	/* Homing first: it stops its motor at the next pulse on the endstop edge */
+	homing_input_edge(3, line_high);
 	
-	if (read_INPUT3)
+	if (line_high)
 	{
 		inputs_current_read &= ~B_INPUT3;
 		
 		if (app_regs.REG_INPUT3_OPERATION_MODE & 0x20)	// Means it's configured to stop when falling
 		{
-			motor_stopped_mask = (if_moving_stop_rotation(app_regs.REG_INPUT3_OPERATION_MODE & 0x0F)) ? (app_regs.REG_INPUT3_OPERATION_MODE & 0x0F) : 0;
+			stop_unless_homing(app_regs.REG_INPUT3_OPERATION_MODE & 0x03);
 		}
 	}
 	else
@@ -187,7 +193,7 @@ ISR(PORTH_INT0_vect, ISR_NAKED)
 		
 		if (app_regs.REG_INPUT3_OPERATION_MODE & 0x10)	// Means it's configured to stop when rising
 		{
-			motor_stopped_mask = (if_moving_stop_rotation(app_regs.REG_INPUT3_OPERATION_MODE & 0x0F)) ? (app_regs.REG_INPUT3_OPERATION_MODE & 0x0F) : 0;
+			stop_unless_homing(app_regs.REG_INPUT3_OPERATION_MODE & 0x03);
 		}
 	}
 	
@@ -199,10 +205,7 @@ ISR(PORTH_INT0_vect, ISR_NAKED)
 		inputs_previous_read = inputs_current_read;
 	}
 	
-	if (motor_stopped_mask)
-	{
-		send_motors_stopped_event(motor_stopped_mask);
-	}
+	/* MotorStopped is sent by the 1 ms callback once the motor has stopped */
 	
 	reti();
 }
@@ -218,10 +221,8 @@ ISR(PORTC_INT1_vect, ISR_NAKED)
 	uint8_t prev_reg = app_regs.REG_MOTORS_ERROR_DETECTTION;	
 	
 	clr_DRIVE_ENABLE_M0;
-	if (if_moving_stop_rotation(0))
-	{
-		send_motors_stopped_event(0);
-	}
+	if_moving_stop_rotation(0);   /* reported by the 1 ms callback */
+	homing_lost(B_MOTOR0);
 	clr_LED_M0;
 		
 	app_regs.REG_MOTORS_ERROR_DETECTTION |= B_MOTOR0;
@@ -245,10 +246,8 @@ ISR(PORTD_INT1_vect, ISR_NAKED)
 	uint8_t prev_reg = app_regs.REG_MOTORS_ERROR_DETECTTION;
 	
 	clr_DRIVE_ENABLE_M1;
-	if (if_moving_stop_rotation(1))
-	{
-		send_motors_stopped_event(1);
-	}
+	if_moving_stop_rotation(1);   /* reported by the 1 ms callback */
+	homing_lost(B_MOTOR1);
 	clr_LED_M1;
 		
 	app_regs.REG_MOTORS_ERROR_DETECTTION |= B_MOTOR1;
@@ -272,10 +271,8 @@ ISR(PORTE_INT1_vect, ISR_NAKED)
 	uint8_t prev_reg = app_regs.REG_MOTORS_ERROR_DETECTTION;
 	
 	clr_DRIVE_ENABLE_M2;
-	if (if_moving_stop_rotation(2))
-	{
-		send_motors_stopped_event(2);
-	}
+	if_moving_stop_rotation(2);   /* reported by the 1 ms callback */
+	homing_lost(B_MOTOR2);
 	clr_LED_M2;
 	
 	app_regs.REG_MOTORS_ERROR_DETECTTION |= B_MOTOR2;
@@ -299,10 +296,8 @@ ISR(PORTJ_INT1_vect, ISR_NAKED)
 	uint8_t prev_reg = app_regs.REG_MOTORS_ERROR_DETECTTION;
 		
 	clr_DRIVE_ENABLE_M3;
-	if (if_moving_stop_rotation(3))
-	{
-		send_motors_stopped_event(3);
-	}
+	if_moving_stop_rotation(3);   /* reported by the 1 ms callback */
+	homing_lost(B_MOTOR3);
 	clr_LED_M3;
 		
 	app_regs.REG_MOTORS_ERROR_DETECTTION |= B_MOTOR3;		
@@ -347,14 +342,14 @@ ISR(PORTQ_INT1_vect, ISR_NAKED)
 		{
 			if (enable_counter == 0)
 			{
-				uint8_t motor_stopped_mask = 0;
-				
 				enable_counter = 1;
 				
-				motor_stopped_mask |= (if_moving_stop_rotation(0)) ? B_MOTOR0 : 0;
-				motor_stopped_mask |= (if_moving_stop_rotation(1)) ? B_MOTOR1 : 0;
-				motor_stopped_mask |= (if_moving_stop_rotation(2)) ? B_MOTOR2 : 0;
-				motor_stopped_mask |= (if_moving_stop_rotation(3)) ? B_MOTOR3 : 0;
+				/* Stops are reported by the 1 ms callback */
+				if_moving_stop_rotation(0);
+				if_moving_stop_rotation(1);
+				if_moving_stop_rotation(2);
+				if_moving_stop_rotation(3);
+				homing_lost(B_MOTOR0 | B_MOTOR1 | B_MOTOR2 | B_MOTOR3);
 				
 				clr_DRIVE_ENABLE_M0; clr_LED_M0;
 				clr_DRIVE_ENABLE_M1; clr_LED_M1;
@@ -363,11 +358,6 @@ ISR(PORTQ_INT1_vect, ISR_NAKED)
 				
 				app_regs.REG_EMERGENCY_DETECTION = GM_DISABLED;
 				core_func_send_event(ADD_REG_EMERGENCY_DETECTION, true);
-				
-				if (motor_stopped_mask)
-				{
-					send_motors_stopped_event(motor_stopped_mask);
-				}
 			}
 		}
 	}
@@ -383,14 +373,14 @@ ISR(PORTQ_INT1_vect, ISR_NAKED)
 		{
 			if (enable_counter == 0)
 			{
-				uint8_t motor_stopped_mask = 0;
-				
 				enable_counter = 1;
 				
-				motor_stopped_mask |= (if_moving_stop_rotation(0)) ? B_MOTOR0 : 0;
-				motor_stopped_mask |= (if_moving_stop_rotation(1)) ? B_MOTOR1 : 0;
-				motor_stopped_mask |= (if_moving_stop_rotation(2)) ? B_MOTOR2 : 0;
-				motor_stopped_mask |= (if_moving_stop_rotation(3)) ? B_MOTOR3 : 0;
+				/* Stops are reported by the 1 ms callback */
+				if_moving_stop_rotation(0);
+				if_moving_stop_rotation(1);
+				if_moving_stop_rotation(2);
+				if_moving_stop_rotation(3);
+				homing_lost(B_MOTOR0 | B_MOTOR1 | B_MOTOR2 | B_MOTOR3);
 				
 				clr_DRIVE_ENABLE_M0; clr_LED_M0;
 				clr_DRIVE_ENABLE_M1; clr_LED_M1;
@@ -399,11 +389,6 @@ ISR(PORTQ_INT1_vect, ISR_NAKED)
 				
 				app_regs.REG_EMERGENCY_DETECTION = GM_DISABLED;
 				core_func_send_event(ADD_REG_EMERGENCY_DETECTION, true);
-				
-				if (motor_stopped_mask)
-				{
-					send_motors_stopped_event(motor_stopped_mask);
-				}
 			}
 		}
 		
