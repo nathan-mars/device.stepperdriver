@@ -784,6 +784,7 @@ registers:
     access: Write
     minValue: 10
     maxValue: 16000
+    defaultValue: 100
     description: Time between pulses, in microseconds, while searching for the endstop and backing off from it (default 100).
     payloadSpec:
       Motor0:
@@ -805,6 +806,7 @@ registers:
     access: Write
     minValue: 10
     maxValue: 16000
+    defaultValue: 500
     description: Time between pulses, in microseconds, for the final approach to the endstop (default 500). The motor always stops within one pulse of the sensor edge, but at speed the carriage leads the step count by up to tens of pulses, so a slow final approach is what makes position 0 repeatable.
     payloadSpec:
       Motor0:
@@ -851,6 +853,7 @@ registers:
     length: 4
     access: Write
     minValue: 1
+    defaultValue: 800
     description: Pulses to move away from the endstop between the search and the final approach (default 800). Must be larger than the sensor's hysteresis, or homing fails.
     payloadSpec:
       Motor0:
